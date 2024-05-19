@@ -9,7 +9,7 @@ import random as rd
 #--------------------------------------------------#
 ### DATA (self-made)
 #tijvk, time vehicle v to fly from i to j to perform k at node j
-test
+test2
 #--------------------------------------------------#
 ####### MODEL            #######
 
