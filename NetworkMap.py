@@ -3,10 +3,16 @@ import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 import random as rd
-from UAVModel import time, n, w, lst_v, lst_j, lst_k, lst_i
+from gurobipy import *
 
-# Create a graph
-G = nx.DiGraph()
+# Ensure the UAVModel import is the MILP code above. This is for reference.
+from UAVModel import time, n, w, lst_v, lst_j, lst_k, lst_i, x1, x2
+
+# Run the MILP model (code provided above)
+# Assuming m is the model and x1, x2 are the decision variables as defined earlier
+
+# Create a MultiDiGraph
+G = nx.MultiDiGraph()
 
 # Add nodes
 for node in lst_i:
@@ -16,30 +22,36 @@ for node in lst_i:
 sink_node = n + w + 1
 G.add_node(sink_node, label='Sink')
 
-# Add edges with weights (time data)
+# Initialize a colormap
+cmap = plt.get_cmap('tab10')  # Use 'tab10' colormap which has 10 distinct colors
+
+# Only add edges that are active in the MILP solution and store their UAV index
+edges = []
 for i in lst_i:
     for j in lst_j:
         if i != j:
             for v in lst_v:
                 for k in lst_k:
-                    G.add_edge(i, j, weight=time[i, j, v, k])
+                    if (i, j, v, k) in x1 and x1[i, j, v, k].X > 0.5:
+                        G.add_edge(i, j, weight=time[i, j, v, k], UAV=v, task=k)
 
-# Add edges from all nodes to the sink node
+# Add edges from nodes to the sink node if active
 for i in lst_i:
     for v in lst_v:
-        for k in lst_k:
-            G.add_edge(i, sink_node, weight=time[i, lst_j[-1], v, k])  # Using the last target as a representative for the sink node edge weights
+        if (i, sink_node, v) in x2 and x2[i, sink_node, v].X > 0.5:
+            G.add_edge(i, sink_node, weight=time[i, lst_j[-1], v, lst_k[-1]], UAV=v)  # Using last task and target for weight
 
-# Add self-loops for target nodes
+# Add self-loops for target nodes if active
 for j in lst_j:
     for v in lst_v:
-        G.add_edge(j, j, weight=time[j, j, v, 2])
+        if (j, j, v, 2) in x1 and x1[j, j, v, 2].X > 0.5:
+            G.add_edge(j, j, weight=time[j, j, v, 2], UAV=v)
 
 # Set positions manually
 pos = {}
 
 # Sink node on the right
-pos[sink_node] = (1, 0)
+pos[sink_node] = (1, 0.5)
 
 # Target nodes in the middle
 for idx, node in enumerate(lst_j, start=1):
@@ -55,14 +67,24 @@ plt.figure(figsize=(10, 6))
 # Draw nodes
 nx.draw_networkx_nodes(G, pos, node_size=700)
 
-# Draw edges
-weights = nx.get_edge_attributes(G, 'weight')
-nx.draw_networkx_edges(G, pos, width=1.0, alpha=0.5)
-
 # Draw labels
 nx.draw_networkx_labels(G, pos, font_size=14)
-edge_labels = {(i, j): f'{weights[i, j]}' for i, j in weights}
-nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
 
-plt.title("UAV Mission Map")
+# Draw arcs for edges with colors corresponding to each UAV
+ax = plt.gca()
+for (i, j, key, data) in G.edges(keys=True, data=True):
+    UAV = data['UAV']
+    rad = 0.1 * (key + 1)  # Offset the radius for each multiple edge
+    arrow = nx.draw_networkx_edges(G, pos, edgelist=[(i, j)], width=2.0, alpha=0.7, edge_color=[cmap(UAV % 10)], connectionstyle=f"arc3,rad={rad}")
+    ax.add_patch(arrow[0])
+
+# Manually add edge labels for multi-edges
+edge_labels = {(i, j, key): f'{data["weight"]}' for i, j, key, data in G.edges(keys=True, data=True)}
+for (i, j, key), label in edge_labels.items():
+    x, y = pos[i]
+    dx, dy = pos[j][0] - x, pos[j][1] - y
+    pos_label = (x + dx / 3, y + dy / 3)
+    plt.text(pos_label[0], pos_label[1], label, bbox=dict(facecolor='white', alpha=0.5), horizontalalignment='center')
+
+plt.title("UAV Mission Map with Active Links")
 plt.show()
