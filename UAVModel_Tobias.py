@@ -6,11 +6,13 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import random as rd
 import time as tm
+import pickle
 
 class UAVStrikeModel:
     def __init__(self, n_targets, n_uavs, endurance, delay=1):
         self.n = n_targets
         self.w = n_uavs
+        self.filename = f'Results/{self.n}_{self.w}'
         self.T = endurance
         self.delay = delay
         self.lst_i = range(1, self.n + self.w + 1)
@@ -144,6 +146,19 @@ class UAVStrikeModel:
         self.elapsed_time = round(end_time - start_time, 2)
         self.m.write('bigboy.lp')
 
+    def save(self):
+        dict_dv = {'x1': {}, 'x2': {}, 't1': {}, 't2': {}}
+        for x1, value1 in self.x1.items():
+            dict_dv['x1'][x1] = value1.X
+        for x2, value2 in self.x2.items():
+            dict_dv['x2'][x2] = value2.X
+        for t1, value3 in self.t1.items():
+            dict_dv['t1'][t1] = value3.X
+        for t2, value4 in self.t2.items():
+                dict_dv['t2'][t2] = value4.X
+        with open(self.filename, 'wb') as f:
+            pickle.dump(dict_dv, f)
+
     def print_solution(self):
         if self.m.status == GRB.OPTIMAL:
             print("Optimal solution found:")
@@ -169,3 +184,5 @@ model = UAVStrikeModel(n_targets=2, n_uavs=5, endurance=100)
 model.optimize()
 print(f'TIME ELAPSED: {model.elapsed_time} s')
 model.print_solution()
+model.save()
+
