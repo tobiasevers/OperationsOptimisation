@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from UAVModel_Tobias import UAVStrikeModel
 
 # Coordinates
 starting_locations = {
@@ -89,7 +90,7 @@ def create_time_dictionary(starting_locations, target_locations, drone_speed):
                         continue  # Skip other tasks at the same location
 
                     time[i, j, v, k] = total_time
-                    print(f'Time from node {i} to target {j} by drone {v} for task {k}: {total_time:.2f} minutes')
+                    # print(f'Time from node {i} to target {j} by drone {v} for task {k}: {total_time:.2f} minutes')
 
     return time
 
@@ -114,6 +115,13 @@ drone_speed = 100  # in km/h
 # Create the time dictionary
 time_dictionary = create_time_dictionary(starting_locations, target_locations, drone_speed)
 
-# Print the time dictionary
-for key, value in time_dictionary.items():
-    print(f'Time from node {key[0]} to target {key[1]} by drone {key[2]} for task {key[3]}: {value:.2f} minutes')
+# # Print the time dictionary
+# for key, value in time_dictionary.items():
+#     print(f'Time from node {key[0]} to target {key[1]} by drone {key[2]} for task {key[3]}: {value:.2f} minutes')
+
+model = UAVStrikeModel(3, 6, 500, 1, time_dictionary)
+model.optimize()
+print(f'TIME ELAPSED: {model.elapsed_time} s')
+model.print_solution()
+model.save()
+
