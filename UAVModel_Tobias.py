@@ -1,15 +1,10 @@
-import pandas as pd
 from gurobipy import *
-import numpy as np
-import xlsxwriter as xlsx
-import networkx as nx
-import matplotlib.pyplot as plt
 import random as rd
 import time as tm
 import pickle
 
 class UAVStrikeModel:
-    def __init__(self, n_targets, n_uavs, endurance, delay=1, time=None):
+    def __init__(self, n_targets, n_uavs, endurance, delay=1, timedict=None):
         self.n = n_targets
         self.w = n_uavs
         self.filename = f'Results/{self.n}_{self.w}'
@@ -27,7 +22,7 @@ class UAVStrikeModel:
         self.t2 = {}
         self.t = None
         self.elapsed_time = None
-        self.time = time
+        self.time = timedict
         if self.time == None:
             self.time = {}
             self.setup_data()
@@ -104,7 +99,6 @@ class UAVStrikeModel:
                 self.m.addLConstr(quicksum(
                     self.x1[i, j, v, k] for v in self.lst_v for i in self.lst_i if i != j and (i, j, v, k) in self.x1),
                                   GRB.LESS_EQUAL, 1)
-
         for j in self.lst_j:
             # C2.2 (7)
             self.m.addLConstr(
@@ -324,4 +318,8 @@ if __name__ == "__main__":
     print(f'TIME ELAPSED: {model.elapsed_time} s')
     model.print_solution()
     model.save()
+
+with open('Results/2_5', 'rb') as f:
+    optimization_results = pickle.load(f)
+    print(optimization_results)
 
