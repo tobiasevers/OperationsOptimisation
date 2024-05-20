@@ -73,29 +73,28 @@ def sensitivity_analysis_delay(n_targets, n_drones, endurance, max_delay):
         print(f"Delay: {delay}, Objective: {obj_val}, Time: {model.elapsed_time}s")
     return results
 
-def combined_sensitivity_analysis(max_targets, max_drones, endurance, max_delay, num_matrices=5, max_time=30):
+def combined_sensitivity_analysis(max_targets, max_drones, endurance, delay, num_matrices=5, max_time=30):
     results = []
     for n_targets in range(1, max_targets + 1):
-        for n_drones in range(1, max_drones + 1):
-            for delay in range(1, max_delay + 1, 2):
-                for _ in range(num_matrices):
-                    time_matrix = create_random_time_matrix(n_targets, n_drones, max_time)
-                    model = UAVStrikeModel(n_targets=n_targets, n_uavs=n_drones, endurance=endurance, delay=delay)
-                    model.time = time_matrix
-                    model.optimize()
-                    if model.m.status == GRB.OPTIMAL:
-                        obj_val = model.m.objVal
-                    else:
-                        obj_val = None
-                    results.append({
-                        'n_targets': n_targets,
-                        'n_drones': n_drones,
-                        'delay': delay,
-                        'time_matrix': time_matrix,
-                        'objective_value': obj_val,
-                        'elapsed_time': model.elapsed_time
-                    })
-                    print(f"Targets: {n_targets}, Drones: {n_drones}, Delay: {delay}, Objective: {obj_val}, Time: {model.elapsed_time}s")
+        for n_drones in range(n_targets, max_drones + 1):
+            for _ in range(num_matrices):
+                time_matrix = create_random_time_matrix(n_targets, n_drones, max_time)
+                model = UAVStrikeModel(n_targets=n_targets, n_uavs=n_drones, endurance=endurance, delay=delay)
+                model.time = time_matrix
+                model.optimize()
+                if model.m.status == GRB.OPTIMAL:
+                    obj_val = model.m.objVal
+                else:
+                    obj_val = None
+                results.append({
+                    'n_targets': n_targets,
+                    'n_drones': n_drones,
+                    'delay': delay,
+                    'time_matrix': time_matrix,
+                    'objective_value': obj_val,
+                    'elapsed_time': model.elapsed_time
+                })
+                print(f"Targets: {n_targets}, Drones: {n_drones}, Delay: {delay}, Objective: {obj_val}, Time: {model.elapsed_time}s")
     return results
 
 def save_results_to_csv(results, filename='sensitivity_analysis_results.csv'):
@@ -151,7 +150,7 @@ if __name__ == "__main__":
     # results_delay = sensitivity_analysis_delay(n_targets=2, n_drones=5, endurance=100, max_delay=5)
 
     # Combined sensitivity analysis
-    combined_results = combined_sensitivity_analysis(max_targets=3, max_drones=10, endurance=100, max_delay=20, num_matrices=100)
+    combined_results = combined_sensitivity_analysis(max_targets=3, max_drones=10, endurance=100, delay=1, num_matrices=25)
 
     # Save results to CSV
     save_results_to_csv(combined_results)
