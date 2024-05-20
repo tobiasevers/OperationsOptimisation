@@ -6,7 +6,7 @@ class TestGurobiModel(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Load the model
-        cls.lp_file_path = 'test2.lp'
+        cls.lp_file_path = 'bigboy.lp'
         cls.model = gp.read(cls.lp_file_path)
         cls.model.optimize()
 

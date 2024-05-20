@@ -5,6 +5,9 @@ import xlsxwriter as xlsx
 import networkx as nx
 import matplotlib.pyplot as plt
 import random as rd
+import time as tm
+
+start_time = tm.time()
 
 #--------------------------------------------------#
 ### DATA (self-made)
@@ -269,10 +272,14 @@ for v in lst_v:
     m.addLConstr(quicksum(time[i,j,v,k] * x1[i,j,v,k] for k in lst_k for i in lst_i for j in lst_j if j!=i and (i,j,v,k) in x1), GRB.LESS_EQUAL, T)
 
 m.update()
-m.write('test2.lp')
+m.write('bigboy.lp')
 
 # Optimize the model
 m.optimize()
+
+end_time = tm.time()
+
+print('\n', 'TIME ELAPSED:', round(end_time - start_time, 2), 's', '\n')
 
 # Print solution
 if m.status == GRB.OPTIMAL:
@@ -295,5 +302,8 @@ if m.status == GRB.OPTIMAL:
             print(f"Task {k} on target {j} completed at time {t1[j, k].X}")
 else:
     print("No optimal solution found.")
+
+
+
 
 
