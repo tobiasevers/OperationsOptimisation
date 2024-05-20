@@ -69,7 +69,7 @@ class TestGurobiModel(unittest.TestCase):
             elif sense == gp.GRB.EQUAL:
                 satisfied = abs(lhs - rhs) < 1e-5
 
-            print(f"Example constraint: {example_constr.ConstrName} is {'satisfied' if satisfied else 'not satisfied'}")
+            print(f"Example constraint: {example_constr.ConstrName} is {'satisfied' if satisfied else 'not satisfied'}", '\n')
 
 if __name__ == '__main__':
     unittest.main()
