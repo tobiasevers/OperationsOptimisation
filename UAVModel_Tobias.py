@@ -293,7 +293,8 @@ class UAVStrikeModel:
             dict_dv['t1'][t1] = value3.X
         for t2, value4 in self.t2.items():
                 dict_dv['t2'][t2] = value4.X
-        dict_dv['Model'] = {'n': self.n, 'w': self.w, 'T': self.T, 'delay': self.delay, 'finaltime': self.t.X}
+        dict_dv['Model'] = {'n': self.n, 'w': self.w, 'T': self.T, 'delay': self.delay, 'finaltime': self.t.X, 'time': self.time}
+        print('finaltime', self.t.X)
         with open(self.filename, 'wb') as f:
             pickle.dump(dict_dv, f)
 

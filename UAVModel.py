@@ -12,7 +12,7 @@ start_time = tm.time()
 #--------------------------------------------------#
 ### DATA (self-made)
 #tijvk, time vehicle v to fly from i to j to perform k at node j
-test233
+
 #--------------------------------------------------#
 ####### MODEL            #######
 
