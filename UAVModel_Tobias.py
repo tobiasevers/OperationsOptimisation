@@ -9,7 +9,7 @@ import time as tm
 import pickle
 
 class UAVStrikeModel:
-    def __init__(self, n_targets, n_uavs, endurance, delay=1):
+    def __init__(self, n_targets, n_uavs, endurance, delay=1, time=None):
         self.n = n_targets
         self.w = n_uavs
         self.filename = f'Results/{self.n}_{self.w}'
@@ -27,7 +27,10 @@ class UAVStrikeModel:
         self.t2 = {}
         self.t = None
         self.elapsed_time = None
-        self.setup_data()
+        self.time = time
+        if self.time == None:
+            self.time = {}
+            self.setup_data()
         self.setup_variables()
         self.setup_constraints()
         self.setup_objective()
@@ -290,7 +293,7 @@ class UAVStrikeModel:
             dict_dv['t1'][t1] = value3.X
         for t2, value4 in self.t2.items():
                 dict_dv['t2'][t2] = value4.X
-        dict_dv['Model'] = {'n': self.n, 'w': self.w, 'T': self.T, 'delay': self.delay, 'finaltime': self.t}
+        dict_dv['Model'] = {'n': self.n, 'w': self.w, 'T': self.T, 'delay': self.delay, 'finaltime': self.t.X}
         with open(self.filename, 'wb') as f:
             pickle.dump(dict_dv, f)
 
@@ -315,7 +318,7 @@ class UAVStrikeModel:
             print("No optimal solution found.")
 
 if __name__ == "__main__":
-    model = UAVStrikeModel(n_targets=4, n_uavs=8, endurance=100)
+    model = UAVStrikeModel(n_targets=2, n_uavs=5, endurance=100)
     model.optimize()
     print(f'TIME ELAPSED: {model.elapsed_time} s')
     model.print_solution()
