@@ -64,11 +64,11 @@ for idx, node in enumerate(range(n + 1, n + w + 1), start=1):
 # Plot the graph
 plt.figure(figsize=(10, 6))
 
-# Draw nodes
-nx.draw_networkx_nodes(G, pos, node_size=700)
+# Draw nodes with white color and black edges
+nx.draw_networkx_nodes(G, pos, node_size=700, node_color='white', edgecolors='black')
 
 # Draw labels
-nx.draw_networkx_labels(G, pos, font_size=14)
+nx.draw_networkx_labels(G, pos, font_size=16)
 
 # Draw arcs for edges with colors corresponding to each UAV
 ax = plt.gca()
@@ -78,13 +78,22 @@ for (i, j, key, data) in G.edges(keys=True, data=True):
     arrow = nx.draw_networkx_edges(G, pos, edgelist=[(i, j)], width=2.0, alpha=0.7, edge_color=[cmap(UAV % 10)], connectionstyle=f"arc3,rad={rad}")
     ax.add_patch(arrow[0])
 
-# Manually add edge labels for multi-edges
+# Manually add edge labels for multi-edges with slight offsets to avoid overlap
 edge_labels = {(i, j, key): f'{data["weight"]}' for i, j, key, data in G.edges(keys=True, data=True)}
 for (i, j, key), label in edge_labels.items():
-    x, y = pos[i]
-    dx, dy = pos[j][0] - x, pos[j][1] - y
-    pos_label = (x + dx / 3, y + dy / 3)
-    plt.text(pos_label[0], pos_label[1], label, bbox=dict(facecolor='white', alpha=0.5), horizontalalignment='center')
+    UAV = G.edges[i, j, key]['UAV']
+    color = cmap(UAV % 10)
+    offset = 0.05 * key  # Slight offset for each label based on the edge key
+    if i == j:
+        # Self-loop label position
+        x, y = pos[i]
+        pos_label = (x, y + 0.1 + offset)  # Slightly above the node with additional offset
+        plt.text(pos_label[0], pos_label[1], label, fontsize=14, color=color, horizontalalignment='center')
+    else:
+        x, y = pos[i]
+        dx, dy = pos[j][0] - x, pos[j][1] - y
+        pos_label = (x + dx / 3 + offset, y + dy / 3 + offset)
+        plt.text(pos_label[0], pos_label[1], label, fontsize=14, color=color, horizontalalignment='center')
 
 plt.title("UAV Mission Map with Active Links")
 plt.show()
