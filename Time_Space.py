@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import pickle
-test
+
+
+
 def plot_time_space_network(results):
     model = results['Model']
     decision_variables = results
@@ -8,6 +10,7 @@ def plot_time_space_network(results):
     x2 = decision_variables.get('x2', {})
     t1 = decision_variables.get('t1', {})
     t2 = decision_variables.get('t2', {})
+
     print(t1)
 
 
@@ -16,6 +19,7 @@ def plot_time_space_network(results):
     n = model['n']  # Number of target nodes
     w = model['w']  # Number of UAVs (source nodes)
     T = model['T']  # Maximum time/endurance for visualization
+    t_max = model[]
     delay = model['delay']  # Delay parameter for visualization
 
     time_space= {}
@@ -71,4 +75,10 @@ def plot_time_space_network(results):
     ax.set_title('Time-Space Network with UAV Movements and Task Completions')
     ax.legend()
 
-    plt.show()
+    plt.show()
+
+
+with open('Results/2_5', 'rb') as f:
+    results = pickle.load(f)
+
+plot_time_space_network(results)
