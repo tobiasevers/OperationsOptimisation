@@ -324,3 +324,7 @@ if __name__ == "__main__":
     model.print_solution()
     model.save()
 
+with open('Results/2_5', 'rb') as f:
+    optimization_results = pickle.load(f)
+    print(optimization_results)
+
