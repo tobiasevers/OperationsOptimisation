@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 from UAVModel_Tobias import UAVStrikeModel
+import pickle
+from matplotlib.patches import FancyArrowPatch
 
 # Coordinates
 starting_locations = {
@@ -17,7 +19,8 @@ target_locations = {
     'Puerto Princesa': (9.7392, 118.7353)
 }
 
-def plot_locations(starting_locations, target_locations):
+
+def plot_locations(starting_locations, target_locations, x1, x2, center_location):
     plt.figure(figsize=(10, 8))
 
     # Plot starting locations
@@ -30,10 +33,44 @@ def plot_locations(starting_locations, target_locations):
         plt.scatter(lon, lat, c='red', marker='x', label='Target Location' if city == 'Legazpi' else "")
         plt.text(lon + 0.1, lat + 0.1, city, fontsize=9)
 
+    # Plot sink node (center location)
+    center_lat, center_lon = center_location
+    plt.scatter(center_lon, center_lat, c='green', marker='s', label='Sink Node')
+    plt.text(center_lon + 0.1, center_lat + 0.1, 'Sink Node', fontsize=9)
+
+    # Combine all locations into a single list
+    all_locations = list(target_locations.values()) + list(starting_locations.values())
+
+    # Plot the drone paths based on the optimization results
+    for (i, j, v, k), value in x1.items():
+        if value > 0:
+            start_lat, start_lon = all_locations[i - 1]
+            end_lat, end_lon = all_locations[j - 1]
+            if i == j and k == 2:  # Task 2 at the same location
+                circle_radius = 0.05
+                circle = FancyArrowPatch((start_lon, start_lat), (start_lon, start_lat),
+                                         connectionstyle=f"arc3,rad={circle_radius}",
+                                         arrowstyle='->', mutation_scale=15, color='green')
+                plt.gca().add_patch(circle)
+                plt.text(start_lon, start_lat, f'D{v}T{k}', fontsize=12, color='green', ha='right')
+            else:
+                plt.plot([start_lon, end_lon], [start_lat, end_lat], label=f'Drone {v} Task {k}')
+                plt.text((start_lon + end_lon) / 2, (start_lat + end_lat) / 2, f'D{v}T{k}', fontsize=8, color='green')
+
+    # Plot paths to the sink node based on x2 results
+    n = len(target_locations)
+    for (i, sink_node, v), value in x2.items():
+        if value > 0 and sink_node == n + v + 1:
+            if not any(x1.get((i, j, v, 2), 0) > 0 for j in range(1, n + 1)):  # Drone does not perform task 2
+                start_lat, start_lon = all_locations[i - 1]
+                plt.plot([start_lon, center_lon], [start_lat, center_lat], 'k--', label=f'Drone {v} to Sink')
+                plt.text((start_lon + center_lon) / 2, (start_lat + center_lat) / 2, f'D{v} to Sink', fontsize=8,
+                         color='black')
+
     # Labels and legend
     plt.xlabel('Longitude')
     plt.ylabel('Latitude')
-    plt.title('Drone Starting and Target Locations in the Philippines')
+    plt.title('Drone Paths and Tasks in the Philippines')
     plt.legend(loc='upper right')
     plt.grid(True)
     plt.show()
@@ -125,3 +162,17 @@ print(f'TIME ELAPSED: {model.elapsed_time} s')
 model.print_solution()
 model.save()
 
+
+# Load the optimization results
+with open('Results/3_6', 'rb') as f:
+    optimization_results = pickle.load(f)
+
+center_location = (14.5995, 120.9842)  # Geographic center of the Philippines
+
+# Define x1 and x2 dictionaries
+x1 = optimization_results.get('x1', {})
+x2 = optimization_results.get('x2', {})
+print('X2:', x2)
+
+# Plot the locations and paths
+plot_locations(starting_locations, target_locations, x1, x2, center_location)
