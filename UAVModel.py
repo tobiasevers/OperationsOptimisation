@@ -34,7 +34,7 @@ T = 1000 #Maximum endurance of any UAV
 
 ### PARAMETERS
 n = 2 # Number of targets
-w = 5  # Number of UAVs
+w = 3  # Number of UAVs
 lst_i = range(1, n+w+1)
 lst_j = range(1, n+1)
 lst_v = range(1, w+1)
@@ -106,36 +106,48 @@ m.update()
 
 ## Add constraints
 # Equality constraints
+''' Mission completion requires that all three tasks are performed on each target exactly one time. Similar to linear assignment problems'''
+''' 3n constraints'''
 for k in [1,3]:
     for j in lst_j:
         # C1.1 (4) If more targets than vehicles, don't include C1
         m.addLConstr(quicksum(x1[i,j,v,k] for i in lst_i if i!=j for v in lst_v), GRB.EQUAL, 1)
-
 for k in [2]:
     for j in lst_j:
         # C1.2 (5)
         m.addLConstr(quicksum(x1[i,j,v,k] for i in lst_i for v in lst_v), GRB.EQUAL, 1)
 
-# #Inequality constraints
+'''Not more than one AV is assigned to perform a specific task k on a specified target j'''
+''' wnk constraints'''
+#Inequality constraints
 for k in [1,3]:
     for v in lst_v:
         for j in lst_j:
             # C2.1 (6) If more targets than vehicles, C2 is interesting
             m.addLConstr(quicksum(x1[i,j,v,k] for i in lst_i if i != j), GRB.LESS_EQUAL, 1)
-
 for v in lst_v:
     for j in lst_j:
         # C2.2 (7)
         m.addLConstr(quicksum(x1[i,j,v,2] for i in lst_i), GRB.LESS_EQUAL, 1)
 
-# for k in lst_k:
-#     for i in lst_i:
-#         # C3.1 (8)
-#         m.addLConstr(quicksum(x1[i,j,v,k] for j in lst_j if i != j for v in lst_v), GRB.LESS_EQUAL, 1)
+'''An AV v, coming from the outside, can visit target j at most once:'''
+''' (n+1)w constraints'''
 
-# for i in lst_i: #need other objective for this
-#     # C3.2 (9)
-#     m.addLConstr(quicksum(x2[i,n+w+1, v] for v in lst_v), GRB.LESS_EQUAL, 1)
+for v in lst_v:
+    for j in lst_j:
+        # C3.1 (8)
+        m.addLConstr(quicksum(x1[i,j,v,k] for i in lst_i if i!=j), GRB.LESS_EQUAL, 1)
+'''each AV v can only enter the sink once'''
+for v in lst_v:
+    # C3.2 (9)
+    m.addLConstr(quicksum(x2[i,n+w+1,v] for i in lst_i), GRB.LESS_EQUAL, 1)
+
+''' AV v leaves node j at most once '''
+''' nw constraints '''
+for v in lst_v:
+    for j in lst_j:
+        # C4.1 (10)
+        m.addLConstr(quicksum(x1[i,j,v,k] + x2[i, n+w+1, v] for v in lst_v for k in lst_k), GRB.LESS_EQUAL, 1)
 
 # for k in lst_k:
 #     for i in lst_j: # important that range for i is different in paper here!
@@ -231,6 +243,11 @@ if m.status == GRB.OPTIMAL:
                 for k in lst_k:
                     if x1[i, j, v, k].X > 0.5:
                         print(f"UAV {v} assigned from {i} to {j} for task {k}")
+    for i in lst_i:
+        for v in lst_v:
+            if x2[i, n+w+1, v].X > 0.5:
+                print(f'UAV {v} flew to sinknode from node {i}')
+
     for j in range(n):
         for k in range(3):
             print(f"Task {k+1} on target {j+1} completed at time {t1[j, k].X}")
