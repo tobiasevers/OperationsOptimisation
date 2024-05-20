@@ -37,8 +37,8 @@ T = 100 #Maximum endurance of any UAV
 delay = 1
 
 ### PARAMETERS
-n = 8 # Number of targets
-w = 15  # Number of UAVs
+n = 3 # Number of targets
+w = 4 # Number of UAVs
 lst_i = range(1, n+w+1)
 lst_j = range(1, n+1)
 lst_v = range(1, w+1)
@@ -178,7 +178,7 @@ for v in lst_v:
 for v in lst_v:
     for j in lst_j:
         # C4.1 (10)
-        m.addLConstr(quicksum(x1[i,j,v,k] + x2[i, n+w+1, v] for i in lst_i if i!=j for k in lst_k if (i,j,v,k) in x1 and (i,n+w+1,v) in x2), GRB.LESS_EQUAL, 1)
+        m.addLConstr(quicksum(x1[i,j,v,k] for i in lst_j if i!= j for k in lst_k if (i,j,v,k) in x1 and (j,n+w+1,v) in x2) + x2[j, n+w+1, v], GRB.LESS_EQUAL, 1)
 
 ''' A munition is perishable. Thus, an AV v can be assigned to attack at most one target. '''
 ''' w constraints'''
@@ -302,8 +302,3 @@ if m.status == GRB.OPTIMAL:
             print(f"Task {k} on target {j} completed at time {t1[j, k].X}")
 else:
     print("No optimal solution found.")
-
-
-
-
-
