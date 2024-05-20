@@ -9,7 +9,7 @@ import time as tm
 import pickle
 
 class UAVStrikeModel:
-    def __init__(self, n_targets, n_uavs, endurance, delay=1):
+    def __init__(self, n_targets, n_uavs, endurance, delay=1, time=None):
         self.n = n_targets
         self.w = n_uavs
         self.filename = f'Results/{self.n}_{self.w}'
@@ -27,6 +27,7 @@ class UAVStrikeModel:
         self.t2 = {}
         self.t = None
         self.elapsed_time = None
+        if
         self.setup_data()
         self.setup_variables()
         self.setup_constraints()
