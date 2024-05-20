@@ -110,6 +110,7 @@ for k in [1,3]:
     for j in lst_j:
         # C1.1 (4) If more targets than vehicles, don't include C1
         m.addLConstr(quicksum(x1[i,j,v,k] for i in lst_i if i!=j for v in lst_v), GRB.EQUAL, 1)
+
 for k in [2]:
     for j in lst_j:
         # C1.2 (5)
@@ -224,12 +225,12 @@ m.optimize()
 # Print solution
 if m.status == GRB.OPTIMAL:
     print("Optimal solution found:")
-    for i in range(n+w):
-        for j in range(n):
-            for v in range(w):
-                for k in range(3):
+    for i in lst_i:
+        for j in lst_j:
+            for v in lst_v:
+                for k in lst_k:
                     if x1[i, j, v, k].X > 0.5:
-                        print(f"UAV {v} assigned from {i} to {j} for task {k+1}")
+                        print(f"UAV {v} assigned from {i} to {j} for task {k}")
     for j in range(n):
         for k in range(3):
             print(f"Task {k+1} on target {j+1} completed at time {t1[j, k].X}")
