@@ -275,7 +275,7 @@ class UAVStrikeModel:
         self.m.optimize()
         end_time = tm.time()
         self.elapsed_time = round(end_time - start_time, 2)
-        self.m.write('bigboy.lp')
+        self.m.write('test.lp')
 
     def save(self):
         dict_dv = {'x1': {}, 'x2': {}, 't1': {}, 't2': {}, 'Model': {}}

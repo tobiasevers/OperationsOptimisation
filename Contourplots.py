@@ -1,9 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from OperationsOptimisation.UAVModel_Tobias import UAVStrikeModel  # Assuming your class is in uav_model.py
+from UAVModelClass import UAVStrikeModel  # Assuming your class is in uav_model.py
 from gurobipy import *
 from matplotlib.colors import LogNorm
-
 
 def plot_heatmap(weighted_array, title):
     """

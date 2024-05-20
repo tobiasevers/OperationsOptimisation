@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from UAVModel_Tobias import UAVStrikeModel
+from UAVModelClass import UAVStrikeModel
 import pickle
 from matplotlib.patches import FancyArrowPatch
 

@@ -1,5 +1,5 @@
 import pandas as pd
-from UAVModel_Tobias import UAVStrikeModel
+from UAVModelClass import UAVStrikeModel
 import random as rd
 import pandas as pd
 import seaborn as sns
