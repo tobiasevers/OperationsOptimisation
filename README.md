@@ -1,4 +1,7 @@
-# OperationsOptimisation
+# Operations Optimisation Project
+Merlijn Broekers, 
+Tobias Evers and 
+Mick Hekkema
 
 **Introduction**
 

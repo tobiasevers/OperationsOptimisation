@@ -23,7 +23,7 @@ m = Model('UAVstrike')
 # n = number of targets
 # tijvk = Time required for air vehicle v to fly from node i to node j to perform task k at node j
 # tjk = Time of completion of task k on target j
-T = 100 #Maximum endurance of any UAV
+T = 1000 #Maximum endurance of any UAV
 # Tij = Flight time between nodes i and j
 # Tv = Endurance of UAV v
 # v = air vehicle index
@@ -34,19 +34,20 @@ T = 100 #Maximum endurance of any UAV
 
 ### PARAMETERS
 n = 2 # Number of targets
-w = 3 # Number of UAVs
+w = 5  # Number of UAVs
 lst_i = range(1, n+w+1)
 lst_j = range(1, n+1)
 lst_v = range(1, w+1)
 lst_k = range(1, 4)
 
+print(lst_i, lst_j)
 ### DATA ###
 time = {}
 for i in lst_i:
     for j in lst_j:
         for v in lst_v:
             for k in lst_k:
-                time[i, j, v, k] = rd.randint(0, 30)
+                time[i, j, v, k] = rd.randint(1, 30)
 
 ## Decision variables
 # Discrete DVs
@@ -90,12 +91,13 @@ x2 = m.addVars(n+w+1, n+w+2, w+1, vtype=GRB.BINARY, name="x2")
 t1 = m.addVars(n+1, 3+1, vtype=GRB.CONTINUOUS, name="t_1")
 t2 = m.addVars(w+1, vtype=GRB.CONTINUOUS, name="t_2")
 
+
 # Objective: Minimize total completion time of all tasks
 #m.setObjective(quicksum(t1[j, 2] for j in range(n)), GRB.MINIMIZE)
 
 m.setObjective(quicksum(time[i, j, v, k] * x1[i, j, v, k] for k in lst_k for v in lst_v for i in lst_i for j in lst_j), GRB.MAXIMIZE)
 
-
+print(m.getObjective())
 
 # Set objective
 m.update()
@@ -104,19 +106,27 @@ m.update()
 
 ## Add constraints
 # Equality constraints
-for v in lst_v:
-    for i in lst_i:
+for k in [1,3]:
+    for j in lst_j:
         # C1.1 (4) If more targets than vehicles, don't include C1
-        m.addLConstr(quicksum(x1[i,j,v,k] for k in [1,3] for j in lst_j if j != i), GRB.EQUAL, 1)
-        # C1.2 (5)
-        m.addLConstr(quicksum(x1[i,j,v,k] for k in [2] for j in lst_j), GRB.EQUAL, 1)
+        m.addLConstr(quicksum(x1[i,j,v,k] for i in lst_i if i!=j for v in lst_v), GRB.EQUAL, 1)
 
-#Inequality constraints
-#for i in lst_i:
-    #C2.1 (6) If more targets than vehicles, C2 is interesting
-    #m.addLConstr(quicksum(x1[i,j,v,k] for k in [1,3] for v in lst_v for j in lst_j if j != i), GRB.LESS_EQUAL, 1)
-    # C2.2 (7)
-    # m.addLConstr(quicksum(x1[i,j,v,2] for v in lst_v for j in lst_j), GRB.LESS_EQUAL, 1)
+for k in [2]:
+    for j in lst_j:
+        # C1.2 (5)
+        m.addLConstr(quicksum(x1[i,j,v,k] for i in lst_i for v in lst_v), GRB.EQUAL, 1)
+
+# #Inequality constraints
+for k in [1,3]:
+    for v in lst_v:
+        for j in lst_j:
+            # C2.1 (6) If more targets than vehicles, C2 is interesting
+            m.addLConstr(quicksum(x1[i,j,v,k] for i in lst_i if i != j), GRB.LESS_EQUAL, 1)
+
+for v in lst_v:
+    for j in lst_j:
+        # C2.2 (7)
+        m.addLConstr(quicksum(x1[i,j,v,2] for i in lst_i), GRB.LESS_EQUAL, 1)
 
 # for k in lst_k:
 #     for i in lst_i:
@@ -143,11 +153,11 @@ for v in lst_v:
 
 # Continuity constraints
 
-for k in lst_k:
-    # C7.1 (13)
-    m.addLConstr(quicksum(x1[i,j,v,3] for i in lst_i for j in lst_j if j != i for v in lst_v), GRB.LESS_EQUAL, quicksum(x1[i,j,v,k] + x2[j,n+w+1,v] for i in lst_j for j in lst_j if j != i for v in lst_v))
-    # C7.2 (14)
-    m.addLConstr(quicksum(x1[i,j,v,1] for i in lst_i for j in lst_j if j != i for v in lst_v), GRB.LESS_EQUAL, quicksum([x1[j,i,v,k] + x1[j,j,v,2] + x2[j,n+w+1,v] for i in lst_j for v in lst_v for j in lst_j if j != i ]))
+# for k in lst_k:
+#     # C7.1 (13)
+#     m.addLConstr(quicksum(x1[i,j,v,3] for i in lst_i for j in lst_j if j != i for v in lst_v), GRB.LESS_EQUAL, quicksum(x1[i,j,v,k] + x2[j,n+w+1,v] for i in lst_j for j in lst_j if j != i for v in lst_v))
+#     # C7.2 (14)
+#     m.addLConstr(quicksum(x1[i,j,v,1] for i in lst_i for j in lst_j if j != i for v in lst_v), GRB.LESS_EQUAL, quicksum([x1[j,i,v,k] + x1[j,j,v,2] + x2[j,n+w+1,v] for i in lst_j for v in lst_v for j in lst_j if j != i ]))
 
 # for k in lst_k:
 #     for i in lst_j:
@@ -160,19 +170,19 @@ for k in lst_k:
         # C7.5 (17)
         # m.addLConstr(quicksum(x1[n+v, j, v, k] + x2[n+v, n + w + 1, v] for j in lst_j if j != i for v in lst_v),
         #              GRB.EQUAL, 1)
-
-for j in lst_i:
-    # C7.6 (18)
-    m.addLConstr(quicksum(x1[i,i,v,2] for i in lst_j for v in lst_v), GRB.LESS_EQUAL, quicksum(x1[j,i,v,1] for i in lst_j for v in lst_v))
-
-# Timing constraints
-for i in lst_j:
-    for j in lst_j:
-        if i != j:
-            for v in lst_v:
-                for k in [1, 3]:
-                    m.addConstr(t1[j, k] <= t1[i, 0] + time[i, j, v, k] + (2 - x1[i, j, v, k] - quicksum(x1[l, i, v, 0] for l in lst_i if l != i)) * T)
-                    m.addConstr(t1[j, k] >= t1[i, 0] + time[i, j, v, k] - (2 - x1[i, j, v, k] - quicksum(x1[l, i, v, 0] for l in lst_i if l != i)) * T)
+#
+# for j in lst_i:
+#     # C7.6 (18)
+#     m.addLConstr(quicksum(x1[i,i,v,2] for i in lst_j for v in lst_v), GRB.LESS_EQUAL, quicksum(x1[j,i,v,1] for i in lst_j for v in lst_v))
+#
+# # Timing constraints
+# for i in lst_j:
+#     for j in lst_j:
+#         if i != j:
+#             for v in lst_v:
+#                 for k in [1, 3]:
+#                     m.addConstr(t1[j, k] <= t1[i, 0] + time[i, j, v, k] + (2 - x1[i, j, v, k] - quicksum(x1[l, i, v, 0] for l in lst_i if l != i)) * T)
+#                     m.addConstr(t1[j, k] >= t1[i, 0] + time[i, j, v, k] - (2 - x1[i, j, v, k] - quicksum(x1[l, i, v, 0] for l in lst_i if l != i)) * T)
 
 # for i in lst_j:
 #     for j in lst_j:
@@ -182,15 +192,15 @@ for i in lst_j:
 #                     m.addConstr(t1[j, k] <= t1[i, 2] + time[i, j, v, k] + (2 - x1[i, j, v, k] - quicksum(x1[l, i, v, 2] for l in lst_i if l != i)) * T)
 #                     m.addConstr(t1[j, k] >= t1[i, 2] + time[i, j, v, k] - (2 - x1[i, j, v, k] - quicksum(x1[l, i, v, 2] for l in lst_i if l != i)) * T)
 
-for j in lst_j:
-    for v in lst_v:
-        for k in lst_k:
-            m.addConstr(t1[j, k] <= t2[v] + time[n+v, j, v, 1] + (1 - x1[n+v, j, v, 1]) * T)
-            m.addConstr(t1[j, k] >= t2[v] + time[n+v, j, v, 1] - (1 - x1[n+v, j, v, 1]) * T)
-#
-for j in lst_j:
-    m.addConstr(t1[j, 1] <= t1[j, 2])
-    m.addConstr(t1[j, 2] <= t1[j, 3])
+# for j in lst_j:
+#     for v in lst_v:
+#         for k in lst_k:
+#             m.addConstr(t1[j, k] <= t2[v] + time[n+v, j, v, 1] + (1 - x1[n+v, j, v, 1]) * T)
+#             m.addConstr(t1[j, k] >= t2[v] + time[n+v, j, v, 1] - (1 - x1[n+v, j, v, 1]) * T)
+# #
+# for j in lst_j:
+#     m.addConstr(t1[j, 1] <= t1[j, 2])
+#     m.addConstr(t1[j, 2] <= t1[j, 3])
 #
 # # Additional constraints for task sequence
 # for j in lst_j:
@@ -206,18 +216,21 @@ for j in lst_j:
 #                 m.addConstr(t1[j, 2] <= t1[i, 2] + time[i, j, v, 2] + (2 - x1[i, j, v, 2] - quicksum(x1[l, i, v, 2] for l in range(n+w) if l != i)) * T)
 #                 m.addConstr(t1[j, 2] >= t1[i, 2] + time[i, j, v, 2] - (2 - x1[i, j, v, 2] - quicksum(x1[l, i, v, 2] for l in range(n+w) if l != i)) * T)
 
+m.update()
+m.write('test2.lp')
+
 # Optimize the model
 m.optimize()
 
 # Print solution
 if m.status == GRB.OPTIMAL:
     print("Optimal solution found:")
-    for i in range(n+w):
-        for j in range(n):
-            for v in range(w):
-                for k in range(3):
+    for i in lst_i:
+        for j in lst_j:
+            for v in lst_v:
+                for k in lst_k:
                     if x1[i, j, v, k].X > 0.5:
-                        print(f"UAV {v} assigned from {i} to {j} for task {k+1}")
+                        print(f"UAV {v} assigned from {i} to {j} for task {k}")
     for j in range(n):
         for k in range(3):
             print(f"Task {k+1} on target {j+1} completed at time {t1[j, k].X}")
