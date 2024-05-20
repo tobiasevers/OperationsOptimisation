@@ -147,7 +147,7 @@ class UAVStrikeModel:
         self.m.write('bigboy.lp')
 
     def save(self):
-        dict_dv = {'x1': {}, 'x2': {}, 't1': {}, 't2': {}}
+        dict_dv = {'x1': {}, 'x2': {}, 't1': {}, 't2': {}, 'Model': {}}
         for x1, value1 in self.x1.items():
             dict_dv['x1'][x1] = value1.X
         for x2, value2 in self.x2.items():
@@ -156,6 +156,7 @@ class UAVStrikeModel:
             dict_dv['t1'][t1] = value3.X
         for t2, value4 in self.t2.items():
                 dict_dv['t2'][t2] = value4.X
+        dict_dv['Model'] = {'n': self.n, 'w': self.w, 'T': self.T, 'delay': self.delay}
         with open(self.filename, 'wb') as f:
             pickle.dump(dict_dv, f)
 
@@ -180,7 +181,7 @@ class UAVStrikeModel:
             print("No optimal solution found.")
 
 # Usage example
-model = UAVStrikeModel(n_targets=2, n_uavs=5, endurance=100)
+model = UAVStrikeModel(n_targets=3, n_uavs=2, endurance=100)
 model.optimize()
 print(f'TIME ELAPSED: {model.elapsed_time} s')
 model.print_solution()
