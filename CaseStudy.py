@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from UAVModel_Tobias import UAVStrikeModel
+from UAVModelClass import UAVStrikeModel
 import pickle
 from matplotlib.patches import FancyArrowPatch
 
@@ -33,11 +33,6 @@ def plot_locations(starting_locations, target_locations, x1, x2, center_location
         plt.scatter(lon, lat, c='red', marker='x', label='Target Location' if city == 'Legazpi' else "")
         plt.text(lon + 0.1, lat + 0.1, city, fontsize=9)
 
-    # Plot sink node (center location)
-    center_lat, center_lon = center_location
-    plt.scatter(center_lon, center_lat, c='green', marker='s', label='Sink Node')
-    plt.text(center_lon + 0.1, center_lat + 0.1, 'Sink Node', fontsize=9)
-
     # Combine all locations into a single list
     all_locations = list(target_locations.values()) + list(starting_locations.values())
 
@@ -46,26 +41,15 @@ def plot_locations(starting_locations, target_locations, x1, x2, center_location
         if value > 0:
             start_lat, start_lon = all_locations[i - 1]
             end_lat, end_lon = all_locations[j - 1]
-            if i == j and k == 2:  # Task 2 at the same location
-                circle_radius = 0.05
-                circle = FancyArrowPatch((start_lon, start_lat), (start_lon, start_lat),
-                                         connectionstyle=f"arc3,rad={circle_radius}",
-                                         arrowstyle='->', mutation_scale=15, color='green')
-                plt.gca().add_patch(circle)
-                plt.text(start_lon, start_lat, f'D{v}T{k}', fontsize=12, color='green', ha='right')
-            else:
-                plt.plot([start_lon, end_lon], [start_lat, end_lat], label=f'Drone {v} Task {k}')
-                plt.text((start_lon + end_lon) / 2, (start_lat + end_lat) / 2, f'D{v}T{k}', fontsize=8, color='green')
+            plt.plot([start_lon, end_lon], [start_lat, end_lat], label=f'Drone {v} Task {k}')
+            plt.text((start_lon + end_lon) / 2, (start_lat + end_lat) / 2, f'D{v}T{k}', fontsize=8, color='green')
 
-    # Plot paths to the sink node based on x2 results
-    n = len(target_locations)
-    for (i, sink_node, v), value in x2.items():
-        if value > 0 and sink_node == n + v + 1:
-            if not any(x1.get((i, j, v, 2), 0) > 0 for j in range(1, n + 1)):  # Drone does not perform task 2
-                start_lat, start_lon = all_locations[i - 1]
-                plt.plot([start_lon, center_lon], [start_lat, center_lat], 'k--', label=f'Drone {v} to Sink')
-                plt.text((start_lon + center_lon) / 2, (start_lat + center_lat) / 2, f'D{v} to Sink', fontsize=8,
-                         color='black')
+            # Add round arrow if the task is 2 (delivery)
+            if k == 2:
+                arrow = FancyArrowPatch((end_lon, end_lat), (end_lon, end_lat), connectionstyle="arc3,rad=1",
+                                        color="orange", arrowstyle='->', mutation_scale=15)
+                plt.gca().add_patch(arrow)
+                plt.text(end_lon + 0.2, end_lat, f'D{v}T{k}', fontsize=8, color='orange')
 
     # Labels and legend
     plt.xlabel('Longitude')

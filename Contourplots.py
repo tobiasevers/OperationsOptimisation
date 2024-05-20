@@ -1,9 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from OperationsOptimisation.UAVModel_Tobias import UAVStrikeModel  # Assuming your class is in uav_model.py
+from UAVModelClass import UAVStrikeModel  # Assuming your class is in uav_model.py
 from gurobipy import *
 from matplotlib.colors import LogNorm
-
 
 def plot_heatmap(weighted_array, title):
     """
@@ -55,9 +54,9 @@ def generate_heatmap_data(min_targets, max_targets, min_uavs, max_uavs, enduranc
 
 if __name__ == "__main__":
     min_targets = 1
-    max_targets = 3
+    max_targets = 4
     min_uavs = 1
-    max_uavs = 5
+    max_uavs = 6
     endurance = 100
     delay = 1
 
