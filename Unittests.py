@@ -2,6 +2,8 @@ import unittest
 import gurobipy as gp
 from collections import defaultdict
 
+from UAVModel import time, n, w, lst_v, lst_j, lst_k, lst_i, x1, x2, t1, t2
+
 class TestGurobiModel(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -70,6 +72,33 @@ class TestGurobiModel(unittest.TestCase):
                 satisfied = abs(lhs - rhs) < 1e-5
 
             print(f"Example constraint: {example_constr.ConstrName} is {'satisfied' if satisfied else 'not satisfied'}", '\n')
+
+    def test_redundant_constraints(self):
+        # Test Symmetry in Task Assignment
+        for i in lst_i:
+            for j in lst_i:
+                if i != j:
+                    for v in lst_v:
+                        for k in lst_k:
+                            if (i, j, v, k) in x1 and (j, i, v, k) in x1:
+                                lhs = x1[i, j, v, k].X + x1[j, i, v, k].X
+                                self.assertLessEqual(lhs, 1, f"Redundant constraint (symmetry in task assignment) violated for {i}->{j} and {j}->{i} for UAV {v} and task {k}")
+
+        # Test Task Completion Ordering
+        for i in lst_j:
+            if (i, 1) in t1 and (i, 3) in t1:
+                self.assertLessEqual(t1[i, 1].X, t1[i, 3].X, f"Redundant constraint (task completion ordering) violated for node {i}")
+
+        # Test Number of Drones to Sink Node
+        num_drones_to_sink = sum(x2[i, n + w + 1, v].X for i in lst_i for v in lst_v if (i, n + w + 1, v) in x2)
+        expected_drones_to_sink = w - n
+        self.assertEqual(num_drones_to_sink, expected_drones_to_sink, f"Redundant constraint (number of drones to sink node) violated: {num_drones_to_sink} != {expected_drones_to_sink}")
+
+        # Test Drone Capacity
+        max_capacity = n + 1
+        for v in lst_v:
+            total_tasks = sum(x1[i, j, v, k].X for i in lst_i for j in lst_j for k in lst_k if (i, j, v, k) in x1)
+            self.assertLessEqual(total_tasks, max_capacity, f"Redundant constraint (drone capacity) violated for UAV {v}: {total_tasks} > {max_capacity}")
 
 if __name__ == '__main__':
     unittest.main()
