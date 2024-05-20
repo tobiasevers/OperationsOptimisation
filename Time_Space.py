@@ -1,3 +1,6 @@
+import matplotlib.pyplot as plt
+import pickle
+
 def plot_time_space_network(results):
     model = results['Model']
     decision_variables = results
