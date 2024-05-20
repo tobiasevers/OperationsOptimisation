@@ -27,8 +27,9 @@ class UAVStrikeModel:
         self.t2 = {}
         self.t = None
         self.elapsed_time = None
-        if
-        self.setup_data()
+        self.time = time
+        if self.time == None:
+            self.setup_data()
         self.setup_variables()
         self.setup_constraints()
         self.setup_objective()
