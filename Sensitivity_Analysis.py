@@ -4,6 +4,7 @@ import random as rd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from gurobipy import *
+import numpy as np
 
 def create_random_time_matrix(n_targets, n_drones, max_time=30):
     time_matrix = {}
@@ -90,8 +91,11 @@ def sensitivity_analysis_endurance(n_targets, max_drones, max_endurance, delay=1
                 else:
                     obj_vals.append(None)
                     elapsed_times.append(None)
-            avg_obj_val = sum(filter(None, obj_vals)) / len(obj_vals) if obj_vals else None
-            avg_elapsed_time = sum(filter(None, elapsed_times)) / len(elapsed_times) if elapsed_times else None
+            # Filter out None values
+            obj_vals = list(filter(None, obj_vals))
+            elapsed_times = list(filter(None, elapsed_times))
+            avg_obj_val = sum(obj_vals) / len(obj_vals) if obj_vals else None
+            avg_elapsed_time = sum(elapsed_times) / len(elapsed_times) if elapsed_times else None
             results.append({
                 'n_drones': n_drones,
                 'endurance': endurance,
@@ -166,24 +170,72 @@ def plot_scatter_elapsed_time(csv_file):
     plt.ylabel("Objective Value")
     plt.show()
 
+
+def sensitivity_analysis_endurance(n_targets, max_drones, max_endurance, delay=1, num_matrices=5, max_time=30):
+    results = []
+    for n_drones in range(n_targets, max_drones + 1):
+        for endurance in range(15, max_endurance + 1, 1):
+            obj_vals = []
+            elapsed_times = []
+            for _ in range(num_matrices):
+                time_matrix = create_random_time_matrix(n_targets, n_drones, max_time)
+                model = UAVStrikeModel(n_targets=n_targets, n_uavs=n_drones, endurance=endurance, delay=delay)
+                model.time = time_matrix
+                model.optimize()
+                if model.m.status == GRB.OPTIMAL:
+                    obj_vals.append(model.m.objVal)
+                    elapsed_times.append(model.elapsed_time)
+                else:
+                    obj_vals.append(None)
+                    elapsed_times.append(None)
+            avg_obj_val = sum(filter(None, obj_vals)) / len(obj_vals) if obj_vals else None
+            avg_elapsed_time = sum(filter(None, elapsed_times)) / len(elapsed_times) if elapsed_times else None
+            results.append({
+                'n_drones': n_drones,
+                'endurance': endurance,
+                'objective_value': avg_obj_val,
+                'elapsed_time': avg_elapsed_time
+            })
+            print(f"Drones: {n_drones}, Endurance: {endurance}, Average Objective: {avg_obj_val}, Average Time: {avg_elapsed_time}s")
+    return results
+
 def plot_heatmap_endurance_drones(csv_file):
     df = pd.read_csv(csv_file)
     pivot_table = df.pivot_table(index="endurance", columns="n_drones", values="objective_value")
+
+    # Ensure the data is in the form of a numpy array for imshow
+    data = pivot_table.values
+
+    # Create the plot
     plt.figure(figsize=(10, 8))
-    sns.heatmap(pivot_table, annot=True, fmt=".2f", cmap="coolwarm", cbar_kws={'label': 'Objective Value'})
+
+    # Use imshow with interpolation
+    plt.imshow(data, aspect='auto', cmap="coolwarm", interpolation='bilinear')
+
+    # Add colorbar
+    cbar = plt.colorbar()
+    cbar.set_label('Objective Value')
+
+    # Set axis labels and title
     plt.title("Heatmap of Objective Values for Endurance vs. Number of Drones")
     plt.xlabel("Number of Drones")
     plt.ylabel("Endurance")
+
+    # Set ticks and labels
+    plt.xticks(ticks=np.arange(len(pivot_table.columns)), labels=pivot_table.columns)
+    plt.yticks(ticks=np.arange(len(pivot_table.index)), labels=pivot_table.index)
+
     plt.show()
+
 
 # Example usage
 if __name__ == "__main__":
     # Parameters
     max_targets = 2
-    max_drones = 6
-    max_endurance = 60
+    max_drones = 5
+    max_endurance = 40
     delay = 5
-    num_matrices = 10
+    num_matrices = 100
 
     # Combined sensitivity analysis
     # combined_results = combined_sensitivity_analysis(max_targets=max_targets, max_drones=max_drones, endurance=max_endurance, delay=delay, num_matrices=num_matrices)
