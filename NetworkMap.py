@@ -39,7 +39,7 @@ for i in lst_i:
 for i in lst_i:
     for v in lst_v:
         if (i, sink_node, v) in x2 and x2[i, sink_node, v].X > 0.5:
-            G.add_edge(i, sink_node, weight=time[i, lst_j[-1], v, lst_k[-1]], UAV=v)  # Using last task and target for weight
+            G.add_edge(i, sink_node, weight=0, UAV=v)  # Using last task and target for weight
 
 # Add self-loops for target nodes if active
 for j in lst_j:
