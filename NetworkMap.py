@@ -6,7 +6,21 @@ import random as rd
 from gurobipy import *
 
 # Ensure the UAVModel import is the MILP code above. This is for reference.
-from UAVModel import time, n, w, lst_v, lst_j, lst_k, lst_i, x1, x2
+from UAVModelClass import UAVStrikeModel
+
+model = UAVStrikeModel(3, 4, 100, delay=1, obj=2)
+time = model.time
+n = model.n
+w = model.w
+lst_v = model.lst_v
+lst_i = model.lst_i
+lst_j = model.lst_j
+lst_k = model.lst_k
+x1 = model.x1
+x2 = model.x2
+model.optimize()
+model.print_solution()
+model.save('Visualveri')
 
 # Run the MILP model (code provided above)
 # Assuming m is the model and x1, x2 are the decision variables as defined earlier

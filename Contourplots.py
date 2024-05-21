@@ -54,7 +54,7 @@ def generate_heatmap_data(min_targets, max_targets, min_uavs, max_uavs, enduranc
 
 if __name__ == "__main__":
     min_targets = 1
-    max_targets = 6
+    max_targets = 3
     min_uavs = 1
     max_uavs = 10
     endurance = 100

@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import pickle
 import math
 
-
 def plot_time_space_network(results):
     model = results['Model']
     decision_variables = results
@@ -14,22 +13,24 @@ def plot_time_space_network(results):
     w = model['w']  # Number of UAVs (source nodes)
     t_max = math.ceil(max(t1.values())) + 2
 
-
     time_space = {}
 
     for v in range(1, w + 1):
         time_space[v] = {t2[v]: (v + n - 1, None)}
 
     # Define nodes: target nodes, UAV starting nodes, and sink node
-    nodes = range(1, n + w + 1 )
+    nodes = range(1, n + w + 1)
 
     # Create the plot
-    fig, ax = plt.subplots(figsize=(14, 8))
+    fig, ax = plt.subplots(figsize=(8, 6))
 
     # Plot nodes on the y-axis
     node_positions = {node: idx for idx, node in enumerate(nodes)}
     for node, pos in node_positions.items():
         ax.plot(range(t_max), [pos] * t_max, 'k--', alpha=0.5)
+
+    # Define the colors in the order specified: orange, green, red, purple
+    colors = ['orange', 'green', 'red', 'purple']
 
     # Plot UAV movements for x1
     for (i, j, v, k), value in x1.items():
@@ -37,11 +38,12 @@ def plot_time_space_network(results):
             end_time = t1[(j, k)]
             time_space[v][end_time] = (j - 1, k)
 
-    for v, timespace in time_space.items():
+    for idx, (v, timespace) in enumerate(time_space.items()):
         sorted_time = sorted(timespace.keys())
         sorted_place = [timespace[key][0] for key in sorted_time]
         sorted_tasks = [timespace[key][1] for key in sorted_time]
-        ax.plot(sorted_time, sorted_place, label=f'UAV {v}', marker='o')
+        color = colors[idx % len(colors)]  # Cycle through the colors list
+        ax.plot(sorted_time, sorted_place, label=f'UAV {v}', marker='o', color=color)
 
         for idx in range(len(sorted_time) - 1):
             start_time = sorted_time[idx]
@@ -51,12 +53,11 @@ def plot_time_space_network(results):
             task_k = sorted_tasks[idx + 1]
             if task_k is not None:
                 ax.text((start_time + end_time) / 2, (start_place + end_place) / 2, f'{task_k}',
-                        horizontalalignment='center', verticalalignment='bottom')
+                        horizontalalignment='center', verticalalignment='bottom', color=color)
 
     for (j, k), value in t1.items():
-        if k==2:
+        if k == 2:
             ax.scatter(value, j - 1, marker='x', c='r', s=200)
-
 
     # Customize plot
     ax.set_yticks(range(len(nodes)))
@@ -69,8 +70,9 @@ def plot_time_space_network(results):
 
     plt.show()
 
-
-with open('Results/3_5', 'rb') as f:
+# Load the results from the pickle file
+with open('Visualveri', 'rb') as f:
     results = pickle.load(f)
 
-#plot_time_space_network(results)
+# Plot the time-space network
+plot_time_space_network(results)

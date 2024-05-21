@@ -248,7 +248,7 @@ class UAVStrikeModel:
         self.elapsed_time = round(end_time - start_time, 2)  # Calculate elapsed time
         self.m.write('test.lp')  # Write model to file
 
-    def save(self):
+    def save(self, filename):
         # Save results
         dict_dv = {'x1': {}, 'x2': {}, 't1': {}, 't2': {}, 'Model': {}}  # Initialize dictionary
         for x1, value1 in self.x1.items():
@@ -261,7 +261,8 @@ class UAVStrikeModel:
                 dict_dv['t2'][t2] = value4.X  # Save t2 variables
         dict_dv['Model'] = {'n': self.n, 'w': self.w, 'T': self.T, 'delay': self.delay, 'finaltime': self.t.X, 'time': self.time}  # Save model parameters
         print('finaltime', self.t.X)  # Print final time
-        with open(self.filename, 'wb') as f:
+        filename = f'Results/{filename}'
+        with open(filename, 'wb') as f:
             pickle.dump(dict_dv, f)  # Save to file
 
     def sensitivity_analysis(self):
