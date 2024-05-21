@@ -22,7 +22,7 @@ def plot_time_space_network(results):
     nodes = range(1, n + w + 1)
 
     # Create the plot
-    fig, ax = plt.subplots(figsize=(8, 6))
+    fig, ax = plt.subplots(figsize=(6, 6))
 
     # Plot nodes on the y-axis
     node_positions = {node: idx for idx, node in enumerate(nodes)}
@@ -70,9 +70,9 @@ def plot_time_space_network(results):
 
     plt.show()
 
-# Load the results from the pickle file
-with open('Visualveri', 'rb') as f:
-    results = pickle.load(f)
+# # Load the results from the pickle file
+# with open('Visualveri', 'rb') as f:
+#     results = pickle.load(f)
 
-# Plot the time-space network
-plot_time_space_network(results)
+# # Plot the time-space network
+# plot_time_space_network(results)
