@@ -141,30 +141,30 @@ time_dictionary = create_time_dictionary(starting_locations, target_locations, d
 # for key, value in time_dictionary.items():
 #     print(f'Time from node {key[0]} to target {key[1]} by drone {key[2]} for task {key[3]}: {value:.2f} minutes')
 
-model = UAVStrikeModel(3, 6, 500, 1, time_dictionary, obj=3)
-model.optimize()
-print(f'TIME ELAPSED: {model.elapsed_time} s')
-model.print_solution()
-model.save()
-
-
-
-# Load the optimization results
-with open('Results/3_6', 'rb') as f:
-    optimization_results = pickle.load(f)
-
-center_location = (14.5995, 120.9842)  # Geographic center of the Philippines
-
-# Define x1 and x2 dictionaries
-x1 = optimization_results.get('x1', {})
-x2 = optimization_results.get('x2', {})
-print('X2:', x2)
-
-# Plot the locations and paths
-plot_locations(starting_locations, target_locations, x1, x2, center_location)
-plot_time_space_network(optimization_results)
-
-model.sensitivity_analysis()
-
+# model = UAVStrikeModel(3, 6, 500, 1, time_dictionary, obj=3)
+# model.optimize()
+# print(f'TIME ELAPSED: {model.elapsed_time} s')
+# model.print_solution()
+# model.save()
+#
+#
+#
+# # Load the optimization results
+# with open('Results/3_6', 'rb') as f:
+#     optimization_results = pickle.load(f)
+#
+# center_location = (14.5995, 120.9842)  # Geographic center of the Philippines
+#
+# # Define x1 and x2 dictionaries
+# x1 = optimization_results.get('x1', {})
+# x2 = optimization_results.get('x2', {})
+# print('X2:', x2)
+#
+# # Plot the locations and paths
+# plot_locations(starting_locations, target_locations, x1, x2, center_location)
+# plot_time_space_network(optimization_results)
+#
+# model.sensitivity_analysis()
+#
 
 

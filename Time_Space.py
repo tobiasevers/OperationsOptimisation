@@ -70,9 +70,9 @@ def plot_time_space_network(results):
 
     plt.show()
 
-# Load the results from the pickle file
-with open('Visualveri', 'rb') as f:
-    results = pickle.load(f)
+# # Load the results from the pickle file
+# with open('Visualveri', 'rb') as f:
+#     results = pickle.load(f)
 
-# Plot the time-space network
-plot_time_space_network(results)
+# # Plot the time-space network
+# plot_time_space_network(results)
