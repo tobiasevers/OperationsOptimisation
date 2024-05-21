@@ -188,6 +188,7 @@ class UAVStrikeModel:
                                     self.x1[l, i, v, 3] for l in self.lst_i if l != i if
                                     (l, i, v, 3) in self.x1 and (i, j, v, k) in self.x1)) * self.w * self.T)
 
+        # More timing constraints
         for i in self.lst_j:
             for j in self.lst_j:
                 if i != j:
@@ -209,6 +210,7 @@ class UAVStrikeModel:
                                 self.x1[l, i, v, 3] for l in self.lst_i if l != i if
                                 (l, i, v, 3) in self.x1 and (i, j, v, 2) in self.x1)) * self.w * self.T)
 
+        # More timing constraints
         for j in self.lst_j:
             for v in self.lst_v:
                 for k in self.lst_k:
@@ -217,14 +219,19 @@ class UAVStrikeModel:
                     self.m.addConstr(self.t1[j, k] >= self.t2[v] + self.time[self.n + v, j, v, k] - (
                                 1 - self.x1[self.n + v, j, v, k]) * self.T)
 
+        # Sequence of tasks
         for j in self.lst_j:
             self.m.addConstr(self.t1[j, 1] + self.delay <= self.t1[j, 2])
             self.m.addConstr(self.t1[j, 2] + self.delay <= self.t1[j, 3])
 
+        # Vehicle's path cannot be longer than endurance
         for v in self.lst_v:
             self.m.addLConstr(quicksum(
                 self.time[i, j, v, k] * self.x1[i, j, v, k] for k in self.lst_k for i in self.lst_i for j in self.lst_j
                 if j != i and (i, j, v, k) in self.x1), GRB.LESS_EQUAL, self.T)
+
+        # Total time is the longest time
+        self.m.addLConstr(self.t1[self.lst_j[-1], 3], GRB.LESS_EQUAL, self.t)
 
         self.m.update()
 
@@ -274,7 +281,7 @@ class UAVStrikeModel:
             print("No optimal solution found.")  # Print if no solution found
 
 if __name__ == "__main__":
-    model = UAVStrikeModel(n_targets=5, n_uavs=100, endurance=100)  # Initialize model
+    model = UAVStrikeModel(n_targets=3, n_uavs=5, endurance=100)  # Initialize model
     model.optimize()  # Optimize model
     print(f'TIME ELAPSED: {model.elapsed_time} s')  # Print elapsed time
     model.print_solution()  # Print solution
