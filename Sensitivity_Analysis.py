@@ -179,7 +179,7 @@ def plot_heatmap_endurance_drones(csv_file):
 # Example usage
 if __name__ == "__main__":
     # Parameters
-    max_targets = 2
+    max_targets = 3
     max_drones = 6
     max_endurance = 60
     delay = 5
