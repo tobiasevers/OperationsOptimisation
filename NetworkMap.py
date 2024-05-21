@@ -6,7 +6,21 @@ import random as rd
 from gurobipy import *
 
 # Ensure the UAVModel import is the MILP code above. This is for reference.
-from UAVModel import time, n, w, lst_v, lst_j, lst_k, lst_i, x1, x2
+from UAVModelClass import UAVStrikeModel
+
+model = UAVStrikeModel(3, 4, 100, delay=1, obj=2)
+time = model.time
+n = model.n
+w = model.w
+lst_v = model.lst_v
+lst_i = model.lst_i
+lst_j = model.lst_j
+lst_k = model.lst_k
+x1 = model.x1
+x2 = model.x2
+model.optimize()
+model.print_solution()
+model.save('Visualveri')
 
 # Run the MILP model (code provided above)
 # Assuming m is the model and x1, x2 are the decision variables as defined earlier
@@ -39,7 +53,7 @@ for i in lst_i:
 for i in lst_i:
     for v in lst_v:
         if (i, sink_node, v) in x2 and x2[i, sink_node, v].X > 0.5:
-            G.add_edge(i, sink_node, weight=time[i, lst_j[-1], v, lst_k[-1]], UAV=v)  # Using last task and target for weight
+            G.add_edge(i, sink_node, weight=0, UAV=v)  # Using last task and target for weight
 
 # Add self-loops for target nodes if active
 for j in lst_j:

@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 from UAVModelClass import UAVStrikeModel
 import pickle
 from matplotlib.patches import FancyArrowPatch
+from Time_Space import plot_time_space_network
 
 # Coordinates
 starting_locations = {
@@ -140,11 +141,12 @@ time_dictionary = create_time_dictionary(starting_locations, target_locations, d
 # for key, value in time_dictionary.items():
 #     print(f'Time from node {key[0]} to target {key[1]} by drone {key[2]} for task {key[3]}: {value:.2f} minutes')
 
-model = UAVStrikeModel(3, 6, 500, 1, time_dictionary)
+model = UAVStrikeModel(3, 6, 500, 1, time_dictionary, obj=3)
 model.optimize()
 print(f'TIME ELAPSED: {model.elapsed_time} s')
 model.print_solution()
 model.save()
+
 
 
 # Load the optimization results
@@ -160,3 +162,9 @@ print('X2:', x2)
 
 # Plot the locations and paths
 plot_locations(starting_locations, target_locations, x1, x2, center_location)
+plot_time_space_network(optimization_results)
+
+model.sensitivity_analysis()
+
+
+

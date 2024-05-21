@@ -4,9 +4,10 @@ import time as tm
 import pickle
 
 class UAVStrikeModel:
-    def __init__(self, n_targets, n_uavs, endurance, delay=1, timedict=None):
+    def __init__(self, n_targets, n_uavs, endurance, delay=1, timedict=None, obj=2):
         self.n = n_targets  # Number of targets
         self.w = n_uavs  # Number of UAVs
+        self.obj = obj
         self.filename = f'Results/{self.n}_{self.w}'  # Filename for saving results
         self.T = endurance  # UAV endurance
         self.delay = delay  # Delay parameter
@@ -71,7 +72,12 @@ class UAVStrikeModel:
 
     def setup_objective(self):
         # Objective function to minimize
-        self.m.setObjective(0.1 * quicksum(self.t1[j, k] for j in self.lst_j for k in self.lst_k) + self.t, GRB.MINIMIZE)
+        if self.obj == 1:
+            self.m.setObjective(quicksum(self.time[i, j, v, k] * self.x1[i, j, v, k] for i in self.lst_i for j in self.lst_j for v in self.lst_v for k in self.lst_k if (i, j, v, k) in self.x1), GRB.MINIMIZE)
+        elif self.obj == 2:
+            self.m.setObjective(0.1 * quicksum(self.t1[j, k] for j in self.lst_j for k in self.lst_k) + self.t, GRB.MINIMIZE)
+        elif self.obj == 3:
+            self.m.setObjective(quicksum(self.x2[i, self.n + self.w + 1, v] for i in self.lst_i for v in self.lst_v if (i, self.n + self.w + 1, v) in self.x2), GRB.MAXIMIZE)
         self.m.update()
 
     def setup_constraints(self):
@@ -188,6 +194,7 @@ class UAVStrikeModel:
                                     self.x1[l, i, v, 3] for l in self.lst_i if l != i if
                                     (l, i, v, 3) in self.x1 and (i, j, v, k) in self.x1)) * self.w * self.T)
 
+        # More timing constraints
         for i in self.lst_j:
             for j in self.lst_j:
                 if i != j:
@@ -209,6 +216,7 @@ class UAVStrikeModel:
                                 self.x1[l, i, v, 3] for l in self.lst_i if l != i if
                                 (l, i, v, 3) in self.x1 and (i, j, v, 2) in self.x1)) * self.w * self.T)
 
+        # More timing constraints
         for j in self.lst_j:
             for v in self.lst_v:
                 for k in self.lst_k:
@@ -217,15 +225,19 @@ class UAVStrikeModel:
                     self.m.addConstr(self.t1[j, k] >= self.t2[v] + self.time[self.n + v, j, v, k] - (
                                 1 - self.x1[self.n + v, j, v, k]) * self.T)
 
+        # Sequence of tasks
         for j in self.lst_j:
             self.m.addConstr(self.t1[j, 1] + self.delay <= self.t1[j, 2])
             self.m.addConstr(self.t1[j, 2] + self.delay <= self.t1[j, 3])
 
+        # Vehicle's path cannot be longer than endurance
         for v in self.lst_v:
             self.m.addLConstr(quicksum(
                 self.time[i, j, v, k] * self.x1[i, j, v, k] for k in self.lst_k for i in self.lst_i for j in self.lst_j
                 if j != i and (i, j, v, k) in self.x1), GRB.LESS_EQUAL, self.T)
 
+        # Total time is the longest time
+        #self.m.addLConstr(max(value.X for value in self.t1.values()), GRB.LESS_EQUAL, self.t)
         self.m.update()
 
     def optimize(self):
@@ -236,7 +248,7 @@ class UAVStrikeModel:
         self.elapsed_time = round(end_time - start_time, 2)  # Calculate elapsed time
         self.m.write('test.lp')  # Write model to file
 
-    def save(self):
+    def save(self, filename):
         # Save results
         dict_dv = {'x1': {}, 'x2': {}, 't1': {}, 't2': {}, 'Model': {}}  # Initialize dictionary
         for x1, value1 in self.x1.items():
@@ -249,8 +261,49 @@ class UAVStrikeModel:
                 dict_dv['t2'][t2] = value4.X  # Save t2 variables
         dict_dv['Model'] = {'n': self.n, 'w': self.w, 'T': self.T, 'delay': self.delay, 'finaltime': self.t.X, 'time': self.time}  # Save model parameters
         print('finaltime', self.t.X)  # Print final time
-        with open(self.filename, 'wb') as f:
+        filename = f'Results/{filename}'
+        with open(filename, 'wb') as f:
             pickle.dump(dict_dv, f)  # Save to file
+
+    def sensitivity_analysis(self):
+        try:
+            if self.m.status == GRB.OPTIMAL:
+                # Objective coefficient ranges
+                obj_low = self.m.getAttr(GRB.Attr.SAObjLow)
+                obj_up = self.m.getAttr(GRB.Attr.SAObjUp)
+
+                # Right-hand side ranges
+                rhs_low = self.m.getAttr(GRB.Attr.SARHSLow)
+                rhs_up = self.m.getAttr(GRB.Attr.SARHSUp)
+
+                # Variable bound ranges
+                lb_low = self.m.getAttr(GRB.Attr.SALBLow)
+                lb_up = self.m.getAttr(GRB.Attr.SALBUp)
+                ub_low = self.m.getAttr(GRB.Attr.SAUBLow)
+                ub_up = self.m.getAttr(GRB.Attr.SAUBUp)
+
+                # Display sensitivity analysis results
+                print("Sensitivity Analysis Results:")
+
+                # Objective coefficient ranges
+                print("\nObjective Coefficient Ranges:")
+                for i in range(self.num_variables):
+                    print(f"x[{i}]: ObjLow = {obj_low[i]}, ObjUp = {obj_up[i]}")
+
+                # Right-hand side ranges
+                print("\nRight-Hand Side Ranges:")
+                for i in range(self.num_constraints):
+                    print(f"Constraint {i}: RHS_Low = {rhs_low[i]}, RHS_Up = {rhs_up[i]}")
+
+                # Variable bound ranges
+                print("\nVariable Bound Ranges:")
+                for i in range(self.num_variables):
+                    print(f"x[{i}]: LB_Low = {lb_low[i]}, LB_Up = {lb_up[i]}, UB_Low = {ub_low[i]}, UB_Up = {ub_up[i]}")
+            else:
+                print("Sensitivity analysis is not available because no optimal solution was found")
+        except GurobiError as e:
+            print(f"Error during sensitivity analysis: {e}")
+
 
     def print_solution(self):
         # Print solution
@@ -273,8 +326,9 @@ class UAVStrikeModel:
         else:
             print("No optimal solution found.")  # Print if no solution found
 
+
 if __name__ == "__main__":
-    model = UAVStrikeModel(n_targets=5, n_uavs=100, endurance=100)  # Initialize model
+    model = UAVStrikeModel(n_targets=3, n_uavs=5, endurance=100)  # Initialize model
     model.optimize()  # Optimize model
     print(f'TIME ELAPSED: {model.elapsed_time} s')  # Print elapsed time
     model.print_solution()  # Print solution
