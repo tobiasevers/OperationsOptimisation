@@ -2,7 +2,8 @@ import unittest
 import gurobipy as gp
 from collections import defaultdict
 
-from UAVModel import time, n, w, lst_v, lst_j, lst_k, lst_i, x1, x2, t1, t2
+from UAVModel import time, n, w, lst_v, lst_j, lst_k, lst_i, x1, x2, t1, t2, T
+
 
 class TestGurobiModel(unittest.TestCase):
     @classmethod
@@ -99,6 +100,117 @@ class TestGurobiModel(unittest.TestCase):
         for v in lst_v:
             total_tasks = sum(x1[i, j, v, k].X for i in lst_i for j in lst_j for k in lst_k if (i, j, v, k) in x1)
             self.assertLessEqual(total_tasks, max_capacity, f"Redundant constraint (drone capacity) violated for UAV {v}: {total_tasks} > {max_capacity}")
+
+    def test_task_completion(self):
+        # For classification and verification tasks (tasks 1 and 3)
+        for k in [1, 3]:
+            for j in lst_j:
+                lhs = sum(x1[i, j, v, k].X for v in lst_v for i in lst_i if (i, j, v, k) in x1)
+                self.assertAlmostEqual(lhs, 1, msg=f"Task completion constraint violated for target {j}, task {k}")
+
+        # For attack tasks (task 2)
+        for j in lst_j:
+            lhs = sum(x1[i, j, v, 2].X for v in lst_v for i in lst_i if (i, j, v, 2) in x1)
+            self.assertAlmostEqual(lhs, 1, msg=f"Task completion constraint violated for target {j}, task 2")
+
+    def test_unique_task_assignment(self):
+        # For classification and verification tasks (tasks 1 and 3)
+        for k in [1, 3]:
+            for v in lst_v:
+                for j in lst_j:
+                    lhs = sum(x1[i, j, v, k].X for i in lst_i if (i, j, v, k) in x1)
+                    self.assertLessEqual(lhs, 1, msg=f"Unique task assignment constraint violated for UAV {v}, target {j}, task {k}")
+
+        # For attack tasks (task 2)
+        for v in lst_v:
+            for j in lst_j:
+                lhs = sum(x1[i, j, v, 2].X for i in lst_i if (i, j, v, 2) in x1)
+                self.assertLessEqual(lhs, 1, msg=f"Unique task assignment constraint violated for UAV {v}, target {j}, task 2")
+
+    def test_single_visit_to_target(self):
+        for v in lst_v:
+            for j in lst_j:
+                lhs = sum(x1[i, j, v, k].X for k in lst_k for i in lst_i if (i, j, v, k) in x1 and i !=j)
+                self.assertLessEqual(lhs, 1, msg=f"Single visit to target constraint violated for UAV {v}, target {j}")
+
+    def test_single_entry_to_sink(self):
+        for v in lst_v:
+            lhs = sum(x2[i, n + w + 1, v].X for i in lst_i if (i, n + w + 1, v) in x2)
+            self.assertLessEqual(lhs, 1, msg=f"Single entry to sink constraint violated for UAV {v}")
+
+    def test_single_attack_per_uav(self):
+        for v in lst_v:
+            lhs = sum(x1[i, j, v, 2].X for j in lst_j for i in lst_i if (i, j, v, 2) in x1)
+            self.assertLessEqual(lhs, 1, msg=f"Single attack per UAV constraint violated for UAV {v}")
+
+    def test_attack_and_verification_exclusive(self):
+        for v in lst_v:
+            for j in lst_j:
+                lhs_attack = sum(x1[i, j, v, 2].X for i in lst_i if (i, j, v, 2) in x1)
+                lhs_verify = sum(x1[i, j, v, 3].X for i in lst_i if (i, j, v, 3) in x1)
+                self.assertLessEqual(lhs_attack + lhs_verify, 1, msg=f"Attack and verification exclusive constraint violated for UAV {v}, target {j}")
+
+    def test_timing_constraints(self):
+        for v in lst_v:
+            for i in lst_i:
+                for j in lst_j:
+                    if i != j:
+                        for k in [1, 3]:
+                            if (j, k) in t1 and (i, 1) in t1:
+                                lhs1 = t1[j, k].X
+                                rhs1 = t1[i, 1].X + time[i, j, v, k] + (2 - x1[i, j, v, k].X - sum(
+                                    x1[l, i, v, 1].X for l in lst_i if (l, i, v, 1) in x1)) * w * T
+                                self.assertLessEqual(lhs1, rhs1,
+                                                     msg=f"Timing constraint (classification and verification) violated for UAV {v}, nodes {i}->{j}, task {k}")
+
+                                lhs2 = t1[j, k].X
+                                rhs2 = t1[i, 1].X + time[i, j, v, k] - (2 - x1[i, j, v, k].X - sum(
+                                    x1[l, i, v, 1].X for l in lst_i if (l, i, v, 1) in x1)) * w * T
+                                self.assertGreaterEqual(lhs2, rhs2,
+                                                        msg=f"Timing constraint (classification and verification) violated for UAV {v}, nodes {i}->{j}, task {k}")
+
+                        if (j, 2) in t1 and (i, 1) in t1:
+                            lhs3 = t1[j, 2].X
+                            rhs3 = t1[i, 1].X + time[i, j, v, 2] + (2 - x1[i, j, v, 2].X - sum(
+                                x1[l, i, v, 1].X for l in lst_i if (l, i, v, 1) in x1)) * w * T
+                            self.assertLessEqual(lhs3, rhs3,
+                                                 msg=f"Timing constraint (attack) violated for UAV {v}, nodes {i}->{j}")
+
+                            lhs4 = t1[j, 2].X
+                            rhs4 = t1[i, 1].X + time[i, j, v, 2] - (2 - x1[i, j, v, 2].X - sum(
+                                x1[l, i, v, 1].X for l in lst_i if (l, i, v, 1) in x1)) * w * T
+                            self.assertGreaterEqual(lhs4, rhs4,
+                                                    msg=f"Timing constraint (attack) violated for UAV {v}, nodes {i}->{j}")
+
+                        if (j, 2) in t1 and (i, 3) in t1:
+                            lhs5 = t1[j, 2].X
+                            rhs5 = t1[i, 3].X + time[i, j, v, 2] + (2 - x1[i, j, v, 2].X - sum(
+                                x1[l, i, v, 3].X for l in lst_i if (l, i, v, 3) in x1)) * w * T
+                            self.assertLessEqual(lhs5, rhs5,
+                                                 msg=f"Timing constraint (verification) violated for UAV {v}, nodes {i}->{j}")
+
+                            lhs6 = t1[j, 2].X
+                            rhs6 = t1[i, 3].X + time[i, j, v, 2] - (2 - x1[i, j, v, 2].X - sum(
+                                x1[l, i, v, 3].X for l in lst_i if (l, i, v, 3) in x1)) * w * T
+                            self.assertGreaterEqual(lhs6, rhs6,
+                                                    msg=f"Timing constraint (verification) violated for UAV {v}, nodes {i}->{j}")
+
+            for j in lst_j:
+                if (j, 1) in t1 and (j, 2) in t1:
+                    lhs7 = t1[j, 1].X
+                    rhs7 = t1[j, 2].X
+                    self.assertLessEqual(lhs7, rhs7, msg=f"Timing constraint (task sequence) violated for node {j}")
+
+                if (j, 2) in t1 and (j, 3) in t1:
+                    lhs8 = t1[j, 2].X
+                    rhs8 = t1[j, 3].X
+                    self.assertLessEqual(lhs8, rhs8, msg=f"Timing constraint (task sequence) violated for node {j}")
+
+    def test_vehicle_endurance_constraint(self):
+        for v in lst_v:
+            lhs = sum(
+                time[i, j, v, k] * x1[i, j, v, k].X for k in lst_k for i in lst_i for j in lst_j if (i, j, v, k) in x1)
+            self.assertLessEqual(lhs, T, msg=f"Vehicle endurance constraint violated for UAV {v}")
 
 if __name__ == '__main__':
     unittest.main()

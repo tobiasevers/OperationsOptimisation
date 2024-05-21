@@ -197,7 +197,7 @@ if __name__ == "__main__":
 
     # # Save results to CSV
     # # save_results_to_csv(combined_results, csv_file_combined)
-    # save_results_to_csv(endurance_results, csv_file_endurance)
+    save_results_to_csv(endurance_results, csv_file_endurance)
     #
     # # Heatmap for Targets vs Drones
     # plot_heatmap_targets_drones(csv_file_combined)
