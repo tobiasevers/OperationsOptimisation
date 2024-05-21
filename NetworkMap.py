@@ -74,7 +74,7 @@ def NetworkMap(model):
         pos[node] = (0, (idx - 1) / (w - 1) if w > 1 else 0)
 
     # Plot the graph
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(6, 6))
 
     # Draw nodes with white color and black edges
     nx.draw_networkx_nodes(G, pos, node_size=700, node_color='white', edgecolors='black')

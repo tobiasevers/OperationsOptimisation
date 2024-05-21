@@ -17,13 +17,11 @@ print(f'TIME ELAPSED: {model.elapsed_time} s')
 model.print_solution()
 model.save('1')
 
-
 # Load the optimization results
 with open('Results/3_6', 'rb') as f:
     optimization_results = pickle.load(f)
 
 center_location = (14.5995, 120.9842)  # Geographic center of the Philippines
-
 # Define x1 and x2 dictionaries
 x1 = optimization_results.get('x1', {})
 x2 = optimization_results.get('x2', {})
