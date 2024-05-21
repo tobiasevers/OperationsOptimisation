@@ -75,8 +75,8 @@ def sensitivity_analysis_delay(n_targets, n_drones, endurance, max_delay):
 
 def sensitivity_analysis_endurance(n_targets, max_drones, max_endurance, delay=1, num_matrices=5, max_time=30):
     results = []
-    for n_drones in range(1, max_drones + 1):
-        for endurance in range(10, max_endurance + 1, 5):
+    for n_drones in range(n_targets, max_drones + 1):
+        for endurance in range(10, max_endurance + 1, 1):
             obj_vals = []
             elapsed_times = []
             for _ in range(num_matrices):
@@ -179,9 +179,9 @@ def plot_heatmap_endurance_drones(csv_file):
 # Example usage
 if __name__ == "__main__":
     # Parameters
-    max_targets = 3
-    max_drones = 10
-    max_endurance = 100
+    max_targets = 2
+    max_drones = 6
+    max_endurance = 60
     delay = 5
     num_matrices = 10
 

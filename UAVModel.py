@@ -37,8 +37,8 @@ T = 100 #Maximum endurance of any UAV
 delay = 1
 
 ### PARAMETERS
-n = 3 # Number of targets
-w = 10 # Number of UAVs
+n = 2 # Number of targets
+w = 5 # Number of UAVs
 lst_i = range(1, n+w+1)
 lst_j = range(1, n+1)
 lst_v = range(1, w+1)
