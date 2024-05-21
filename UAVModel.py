@@ -38,7 +38,7 @@ delay = 1
 
 ### PARAMETERS
 n = 3 # Number of targets
-w = 4 # Number of UAVs
+w = 10 # Number of UAVs
 lst_i = range(1, n+w+1)
 lst_j = range(1, n+1)
 lst_v = range(1, w+1)
