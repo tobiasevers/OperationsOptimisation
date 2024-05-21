@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import pickle
+import math
 
 
 def plot_time_space_network(results):
@@ -9,15 +10,10 @@ def plot_time_space_network(results):
     x2 = decision_variables.get('x2', {})
     t1 = decision_variables.get('t1', {})
     t2 = decision_variables.get('t2', {})
-
-    print([x for x in x2.values() if x == 1.0])
-
     n = model['n']  # Number of target nodes
     w = model['w']  # Number of UAVs (source nodes)
-    T = model['T']  # Maximum time/endurance for visualization
-    t_max = 20
-    delay = model['delay']  # Delay parameter for visualization
-    time = model['time']
+    t_max = math.ceil(max(t1.values())) + 2
+
 
     time_space = {}
 
@@ -25,7 +21,7 @@ def plot_time_space_network(results):
         time_space[v] = {t2[v]: (v + n - 1, None)}
 
     # Define nodes: target nodes, UAV starting nodes, and sink node
-    nodes = range(1, n + w + 1 + 1)
+    nodes = range(1, n + w + 1 )
 
     # Create the plot
     fig, ax = plt.subplots(figsize=(14, 8))
@@ -46,9 +42,6 @@ def plot_time_space_network(results):
         sorted_place = [timespace[key][0] for key in sorted_time]
         sorted_tasks = [timespace[key][1] for key in sorted_time]
         ax.plot(sorted_time, sorted_place, label=f'UAV {v}', marker='o')
-
-        print('time', sorted_time)
-        print('task', sorted_tasks)
 
         for idx in range(len(sorted_time) - 1):
             start_time = sorted_time[idx]
@@ -77,7 +70,7 @@ def plot_time_space_network(results):
     plt.show()
 
 
-with open('Results/3_6', 'rb') as f:
+with open('Results/3_5', 'rb') as f:
     results = pickle.load(f)
 
-plot_time_space_network(results)
+#plot_time_space_network(results)

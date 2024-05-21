@@ -73,11 +73,11 @@ class UAVStrikeModel:
     def setup_objective(self):
         # Objective function to minimize
         if self.obj == 1:
-            self.m.setObjective(quicksum(self.time[i, j, v, k] * self.x1[i, j, v, k] for i in self.lst_i for j in self.lst_j for v in self.lst_v for k in self.lst_k), GRB.MINIMIZE)
+            self.m.setObjective(quicksum(self.time[i, j, v, k] * self.x1[i, j, v, k] for i in self.lst_i for j in self.lst_j for v in self.lst_v for k in self.lst_k if (i, j, v, k) in self.x1), GRB.MINIMIZE)
         elif self.obj == 2:
             self.m.setObjective(0.1 * quicksum(self.t1[j, k] for j in self.lst_j for k in self.lst_k) + self.t, GRB.MINIMIZE)
         elif self.obj == 3:
-            self.m.setObjective(quicksum(self.x2[i, self.n + self.w + 1, v] for i in self.lst_i for v in self.lst_v), GRB.MAXIMIZE)
+            self.m.setObjective(quicksum(self.x2[i, self.n + self.w + 1, v] for i in self.lst_i for v in self.lst_v if (i, self.n + self.w + 1, v) in self.x2), GRB.MAXIMIZE)
         self.m.update()
 
     def setup_constraints(self):
@@ -237,8 +237,7 @@ class UAVStrikeModel:
                 if j != i and (i, j, v, k) in self.x1), GRB.LESS_EQUAL, self.T)
 
         # Total time is the longest time
-        self.m.addLConstr(self.t1[self.lst_j[-1], 3], GRB.LESS_EQUAL, self.t)
-
+        #self.m.addLConstr(max(value.X for value in self.t1.values()), GRB.LESS_EQUAL, self.t)
         self.m.update()
 
     def optimize(self):
@@ -265,6 +264,46 @@ class UAVStrikeModel:
         with open(self.filename, 'wb') as f:
             pickle.dump(dict_dv, f)  # Save to file
 
+    def sensitivity_analysis(self):
+        try:
+            if self.m.status == GRB.OPTIMAL:
+                # Objective coefficient ranges
+                obj_low = self.m.getAttr(GRB.Attr.SAObjLow)
+                obj_up = self.m.getAttr(GRB.Attr.SAObjUp)
+
+                # Right-hand side ranges
+                rhs_low = self.m.getAttr(GRB.Attr.SARHSLow)
+                rhs_up = self.m.getAttr(GRB.Attr.SARHSUp)
+
+                # Variable bound ranges
+                lb_low = self.m.getAttr(GRB.Attr.SALBLow)
+                lb_up = self.m.getAttr(GRB.Attr.SALBUp)
+                ub_low = self.m.getAttr(GRB.Attr.SAUBLow)
+                ub_up = self.m.getAttr(GRB.Attr.SAUBUp)
+
+                # Display sensitivity analysis results
+                print("Sensitivity Analysis Results:")
+
+                # Objective coefficient ranges
+                print("\nObjective Coefficient Ranges:")
+                for i in range(self.num_variables):
+                    print(f"x[{i}]: ObjLow = {obj_low[i]}, ObjUp = {obj_up[i]}")
+
+                # Right-hand side ranges
+                print("\nRight-Hand Side Ranges:")
+                for i in range(self.num_constraints):
+                    print(f"Constraint {i}: RHS_Low = {rhs_low[i]}, RHS_Up = {rhs_up[i]}")
+
+                # Variable bound ranges
+                print("\nVariable Bound Ranges:")
+                for i in range(self.num_variables):
+                    print(f"x[{i}]: LB_Low = {lb_low[i]}, LB_Up = {lb_up[i]}, UB_Low = {ub_low[i]}, UB_Up = {ub_up[i]}")
+            else:
+                print("Sensitivity analysis is not available because no optimal solution was found")
+        except GurobiError as e:
+            print(f"Error during sensitivity analysis: {e}")
+
+
     def print_solution(self):
         # Print solution
         if self.m.status == GRB.OPTIMAL:  # Check if optimal solution found
@@ -285,6 +324,7 @@ class UAVStrikeModel:
                     print(f"Task {k} on target {j} completed at time {self.t1[j, k].X}")  # Print task completion times
         else:
             print("No optimal solution found.")  # Print if no solution found
+
 
 if __name__ == "__main__":
     model = UAVStrikeModel(n_targets=3, n_uavs=5, endurance=100)  # Initialize model
