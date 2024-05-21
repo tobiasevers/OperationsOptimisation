@@ -4,9 +4,10 @@ import time as tm
 import pickle
 
 class UAVStrikeModel:
-    def __init__(self, n_targets, n_uavs, endurance, delay=1, timedict=None):
+    def __init__(self, n_targets, n_uavs, endurance, delay=1, timedict=None, obj=2):
         self.n = n_targets  # Number of targets
         self.w = n_uavs  # Number of UAVs
+        self.obj = obj
         self.filename = f'Results/{self.n}_{self.w}'  # Filename for saving results
         self.T = endurance  # UAV endurance
         self.delay = delay  # Delay parameter
@@ -71,7 +72,12 @@ class UAVStrikeModel:
 
     def setup_objective(self):
         # Objective function to minimize
-        self.m.setObjective(0.1 * quicksum(self.t1[j, k] for j in self.lst_j for k in self.lst_k) + self.t, GRB.MINIMIZE)
+        if self.obj == 1:
+            self.m.setObjective(quicksum(self.time[i, j, v, k] * self.x1[i, j, v, k] for i in self.lst_i for j in self.lst_j for v in self.lst_v for k in self.lst_k), GRB.MINIMIZE)
+        elif self.obj == 2:
+            self.m.setObjective(0.1 * quicksum(self.t1[j, k] for j in self.lst_j for k in self.lst_k) + self.t, GRB.MINIMIZE)
+        elif self.obj == 3:
+            self.m.setObjective(quicksum(self.x2[i, self.n + self.w + 1, v] for i in self.lst_i for v in self.lst_v), GRB.MAXIMIZE)
         self.m.update()
 
     def setup_constraints(self):
