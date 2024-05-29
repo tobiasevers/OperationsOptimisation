@@ -2,7 +2,7 @@ from UAVModelClass import UAVStrikeModel
 import pickle
 from f_visualisation import plot_time_space_network, NetworkMap, plot_locations
 from f_helper import create_time_dictionary
-from CaseStudy import starting_locations, target_locations, center_location
+from coordinates import starting_locations, target_locations, center_location
 
 
 drone_speed = 100  # in km/h

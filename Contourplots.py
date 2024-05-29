@@ -15,5 +15,4 @@ if __name__ == "__main__":
 
     heatmap_data = generate_heatmap_data(min_targets, max_targets, min_uavs, max_uavs, endurance, delay)
     plot_heatmap(heatmap_data, "Optimization Time Heatmap for Varying Number of UAVs and Targets")
-
-
+    
