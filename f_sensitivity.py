@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from UAVModelClass import UAVStrikeModel  # Assuming your class is in uav_model.py
 from gurobipy import *
 from matplotlib.colors import LogNorm
+from f_helper import create_time_dictionary
 import pandas as pd
 import random as rd
 import seaborn as sns
@@ -225,4 +226,98 @@ def plot_heatmap_endurance_drones(csv_file):
     plt.title("Heatmap of Objective Values for Endurance vs. Number of Drones")
     plt.xlabel("Number of Drones")
     plt.ylabel("Endurance")
+    plt.show()
+
+
+def sens_speed(drone_speed, obj, starting_locations, target_locations, n_targets=3, n_UAVS=6, endurance=240, delay=1):
+    time_dictionary = create_time_dictionary(starting_locations, target_locations, drone_speed)
+    model = UAVStrikeModel(n_targets, n_UAVS, endurance, delay, time_dictionary, obj=obj)
+    model.optimize()
+
+    if model.m.status == GRB.OPTIMAL:
+        obj_val = model.m.objVal
+    else:
+        return np.nan
+    
+    return obj_val
+
+def sens_endurance(endurance, obj, starting_locations, target_locations, n_targets=3, n_UAVS=6, drone_speed=500, delay=1):
+    time_dictionary = create_time_dictionary(starting_locations, target_locations, drone_speed)
+    model = UAVStrikeModel(n_targets, n_UAVS, endurance, delay, time_dictionary, obj=obj)
+    model.optimize()
+
+    if model.m.status == GRB.OPTIMAL:
+        obj_val = model.m.objVal
+    else:
+        return np.nan
+
+    return obj_val
+
+def plot_speed(min_speed, max_speed, starting_locations, target_locations, n_targets=3, n_UAVS=6, endurance=240, delay=1):
+    speed_range = range(min_speed, max_speed, 5)
+    # Lists to store results
+    lst_sens_speed_1 = []
+    lst_sens_speed_2 = []
+
+    # Speed sensitivity analysis
+    for speed in speed_range:
+        obj_val_1 = sens_speed(speed, 1, starting_locations, target_locations, n_targets, n_UAVS, endurance, delay)
+        obj_val_2 = sens_speed(speed, 2, starting_locations, target_locations, n_targets, n_UAVS, endurance, delay)
+        
+        lst_sens_speed_1.append(obj_val_1)
+        lst_sens_speed_2.append(obj_val_2)
+
+    # Plotting speed sensitivity with secondary y-axis
+    fig, ax1 = plt.subplots(figsize=(5, 4))
+
+    color = 'tab:blue'
+    ax1.set_xlabel('Drone Speed (km/h)')
+    ax1.set_ylabel('Objective Value 1', color=color)
+    ax1.plot(speed_range, lst_sens_speed_1, color=color, label='Summed flight time of UAVs (min)')
+    ax1.tick_params(axis='y', labelcolor=color)
+
+    ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+    color = 'tab:red'
+    ax2.set_ylabel('Objective Value 2', color=color)  # we already handled the x-label with ax1
+    ax2.plot(speed_range, lst_sens_speed_2, color=color, label='Mission time (min)')
+    ax2.tick_params(axis='y', labelcolor=color)
+
+    fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    plt.title('Sensitivity Analysis of Objective Value to Drone Speed')
+    plt.grid(True)
+    plt.xlim(speed_range.start, speed_range.stop - speed_range.step)
+    plt.show()
+
+def plot_endurance(min_end, max_end, starting_locations, target_locations, n_targets=3, n_UAVS=6, drone_speed=100, delay=1):
+    endurance_range = range(min_end, max_end, 5)
+
+    lst_endurance_1 = []
+    lst_endurance_2 = []
+
+    # Endurance sensitivity analysis
+    for endurance in endurance_range:
+        obj_val_1 = sens_endurance(endurance, 1, starting_locations, target_locations, n_targets, n_UAVS, drone_speed, delay)
+        obj_val_2 = sens_endurance(endurance, 2, starting_locations, target_locations, n_targets, n_UAVS, drone_speed, delay)
+        lst_endurance_1.append(obj_val_1)
+        lst_endurance_2.append(obj_val_2)
+
+    # Plotting endurance sensitivity with secondary y-axis
+    fig, ax1 = plt.subplots(figsize=(5, 4))
+
+    color = 'tab:blue'
+    ax1.set_xlabel('Endurance (minutes)')
+    ax1.set_ylabel('Objective Value 1', color=color)
+    ax1.plot(endurance_range, lst_endurance_1, color=color, label='Summed flight time of UAVs (min)')
+    ax1.tick_params(axis='y', labelcolor=color)
+
+    ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+    color = 'tab:red'
+    ax2.set_ylabel('Objective Value 2', color=color)  # we already handled the x-label with ax1
+    ax2.plot(endurance_range, lst_endurance_2, color=color, label='Mission time (min)')
+    ax2.tick_params(axis='y', labelcolor=color)
+
+    fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    plt.title('Sensitivity Analysis of Objective Value to Endurance')
+    plt.grid(True)
+    plt.xlim(endurance_range.start, endurance_range.stop - endurance_range.step)
     plt.show()

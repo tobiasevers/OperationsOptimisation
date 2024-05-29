@@ -3,7 +3,8 @@ import pickle
 from f_visualisation import plot_time_space_network, NetworkMap, plot_locations
 from f_helper import create_time_dictionary
 from coordinates import starting_locations, target_locations, center_location
-
+from gurobipy import *
+from f_sensitivity import plot_speed, plot_endurance
 
 drone_speed = 100  # in km/h
 
@@ -30,4 +31,6 @@ plot_locations(starting_locations, target_locations, x1, x2, center_location)
 plot_time_space_network(optimization_results)
 NetworkMap(model)
 
-model.sensitivity_analysis()
+#Perfrom the sensitivity analysis for speed and endurance
+plot_speed(120, 180, starting_locations, target_locations)
+plot_endurance(300, 650, starting_locations, target_locations)
