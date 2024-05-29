@@ -179,7 +179,7 @@ def NetworkMap(model):
     plt.show()
 
 def plot_locations(starting_locations, target_locations, x1, x2, center_location):
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(5, 7))  # Adjusted figure size for better visibility
 
     # Plot starting locations
     for city, (lat, lon) in starting_locations.items():
@@ -199,20 +199,20 @@ def plot_locations(starting_locations, target_locations, x1, x2, center_location
         if value > 0:
             start_lat, start_lon = all_locations[i - 1]
             end_lat, end_lon = all_locations[j - 1]
-            plt.plot([start_lon, end_lon], [start_lat, end_lat], label=f'Drone {v} Task {k}')
-            #plt.text((start_lon + end_lon) / 2, (start_lat + end_lat) / 2, f'D{v}T{k}', fontsize=8, color='green')
-
-            # Add round arrow if the task is 2 (delivery)
-            if k == 2:
-                arrow = FancyArrowPatch((end_lon, end_lat), (end_lon, end_lat), connectionstyle="arc3,rad=1",
-                                        color="orange", arrowstyle='->', mutation_scale=15)
-                plt.gca().add_patch(arrow)
-                #plt.text(end_lon + 0.2, end_lat, f'D{v}T{k}', fontsize=8, color='orange')
-
+            if k==1:
+                plt.plot([start_lon, end_lon], [start_lat, end_lat], label=f'Drone {v} Task {k} + 2')
+            elif k==3:
+                plt.plot([start_lon, end_lon], [start_lat, end_lat], label=f'Drone {v} Task {k}')
+            
     # Labels and legend
     plt.xlabel('Longitude')
     plt.ylabel('Latitude')
     plt.title('Drone Paths and Tasks in the Philippines')
-    plt.legend(loc='upper right')
+
+    # Combine unique labels for starting and target locations
+    handles, labels = plt.gca().get_legend_handles_labels()
+    by_label = dict(zip(labels, handles))
+    plt.legend(by_label.values(), by_label.keys(), loc='center left', bbox_to_anchor=(1, 0.5))
+
     plt.grid(True)
     plt.show()
