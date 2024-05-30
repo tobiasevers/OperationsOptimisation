@@ -179,7 +179,7 @@ def NetworkMap(model):
     plt.show()
 
 def plot_locations(starting_locations, target_locations, x1, x2, center_location):
-    plt.figure(figsize=(5, 7))  # Adjusted figure size for better visibility
+    plt.figure(figsize=(6, 6))  # Adjusted figure size for better visibility
 
     # Plot starting locations
     for city, (lat, lon) in starting_locations.items():
@@ -215,4 +215,5 @@ def plot_locations(starting_locations, target_locations, x1, x2, center_location
     plt.legend(by_label.values(), by_label.keys(), loc='center left', bbox_to_anchor=(1, 0.5))
 
     plt.grid(True)
+    plt.tight_layout()
     plt.show()

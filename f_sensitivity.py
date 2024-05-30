@@ -282,7 +282,7 @@ def plot_speed(min_speed, max_speed, starting_locations, target_locations, n_tar
     ax2.plot(speed_range, lst_sens_speed_2, color=color, label='Mission time (min)')
     ax2.tick_params(axis='y', labelcolor=color)
 
-    fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    plt.tight_layout()  # otherwise the right y-label is slightly clipped
     plt.title('Sensitivity Analysis of Objective Value to Drone Speed')
     plt.grid(True)
     plt.xlim(speed_range.start, speed_range.stop - speed_range.step)
@@ -316,8 +316,88 @@ def plot_endurance(min_end, max_end, starting_locations, target_locations, n_tar
     ax2.plot(endurance_range, lst_endurance_2, color=color, label='Mission time (min)')
     ax2.tick_params(axis='y', labelcolor=color)
 
-    fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    plt.tight_layout()  # otherwise the right y-label is slightly clipped
     plt.title('Sensitivity Analysis of Objective Value to Endurance')
     plt.grid(True)
     plt.xlim(endurance_range.start, endurance_range.stop - endurance_range.step)
     plt.show()
+
+def plot_heatmap_speed_endurance(min_speed, max_speed, min_endurance, max_endurance, starting_locations, target_locations, n_targets=3, n_UAVS=6, delay=1):
+    speed_range = range(min_speed, max_speed + 1, 10)
+    endurance_range = range(min_endurance, max_endurance + 1, 10)
+
+    # Initialize the matrices to store objective values
+    obj_values_1 = np.full((len(speed_range), len(endurance_range)), np.nan)
+    obj_values_2 = np.full((len(speed_range), len(endurance_range)), np.nan)
+    obj_values_3 = np.full((len(speed_range), len(endurance_range)), np.nan)
+
+    # Perform the analysis
+    for i, speed in enumerate(speed_range):
+        for j, endurance in enumerate(endurance_range):
+            obj_values_1[i, j] = sens_endurance(endurance, 1, starting_locations, target_locations, n_targets, n_UAVS, speed, delay)
+            obj_values_2[i, j] = sens_endurance(endurance, 2, starting_locations, target_locations, n_targets, n_UAVS, speed, delay)
+            obj_values_3[i, j] = sens_endurance(endurance, 3, starting_locations, target_locations, n_targets, n_UAVS, speed, delay)
+
+    # Create a colormap with NaN values as light red
+    cmap = plt.cm.Blues
+    cmap.set_bad(color='lightpink')  # light red color for NaNs
+
+    # Mask NaN values
+    masked_obj_values_1 = np.ma.masked_where(np.isnan(obj_values_1), obj_values_1)
+    masked_obj_values_2 = np.ma.masked_where(np.isnan(obj_values_2), obj_values_2)
+    masked_obj_values_3 = np.ma.masked_where(np.isnan(obj_values_3), obj_values_3)
+
+    # Plot the heatmap for Objective Value 1
+    plt.figure(figsize=(5, 4))
+    img1 = plt.imshow(masked_obj_values_1, aspect='auto', origin='lower', extent=[min_endurance/60, max_endurance/60, min_speed, max_speed], cmap=cmap)
+    plt.colorbar(img1, label='Objective Value 1')
+    plt.scatter(300/60, 64.8, color='black')  # Plot the data point
+    plt.text(300/60 + 0.1, 64.8, 'Albatross', color='black', fontsize=9)
+    plt.scatter(300/60, 80, color='black')  # Plot the data point
+    plt.text(300/60 + 0.1, 80, 'Stiraria E', color='black', fontsize=9)
+    plt.scatter(360/60, 89, color='black')  # Plot the data point
+    plt.text(360/60 + 0.1, 89, 'CGT50', color='black', fontsize=9)
+    plt.scatter(210/60, 90, color='black')  # Plot the data point
+    plt.text(210/60 + 0.1, 90, 'Yangda', color='black', fontsize=9)
+    plt.xlabel('Endurance (hours)')
+    plt.ylabel('Speed (km/h)')
+    plt.title('Contour Plot for Objective Value 1')
+    plt.show()
+
+    # Plot the heatmap for Objective Value 2
+    plt.figure(figsize=(5, 4))
+    img2 = plt.imshow(masked_obj_values_2, aspect='auto', origin='lower', extent=[min_endurance/60, max_endurance/60, min_speed, max_speed], cmap=cmap)
+    plt.colorbar(img2, label='Objective Value 2')
+    plt.scatter(300/60, 64.8, color='black')  # Plot the data point
+    plt.text(300/60 + 0.1, 64.8, 'Albatross', color='black', fontsize=9)
+    plt.scatter(300/60, 80, color='black')  # Plot the data point
+    plt.text(300/60 + 0.1, 80, 'Stiraria E', color='black', fontsize=9)
+    plt.scatter(360/60, 89, color='black')  # Plot the data point
+    plt.text(360/60 + 0.1, 89, 'CGT50', color='black', fontsize=9)
+    plt.scatter(210/60, 90, color='black')  # Plot the data point
+    plt.text(210/60 + 0.1, 90, 'Yangda', color='black', fontsize=9)
+    plt.xlabel('Endurance (hours)')
+    plt.ylabel('Speed (km/h)')
+    plt.title('Contour Plot for Objective Value 2')
+    plt.show()
+
+    # Plot the heatmap for Objective Value 3
+    plt.figure(figsize=(5, 4))
+    img3 = plt.imshow(masked_obj_values_3, aspect='auto', origin='lower', extent=[min_endurance/60, max_endurance/60, min_speed, max_speed], cmap=cmap)
+    plt.colorbar(img3, label='Objective Value 3')
+    plt.scatter(300/60, 64.8, color='black')  # Plot the data point
+    plt.text(300/60 + 0.1, 64.8, 'Albatross', color='black', fontsize=9)
+    plt.scatter(300/60, 80, color='black')  # Plot the data point
+    plt.text(300/60 + 0.1, 80, 'Stiraria E', color='black', fontsize=9)
+    plt.scatter(360/60, 89, color='black')  # Plot the data point
+    plt.text(360/60 + 0.1, 89, 'CGT50', color='black', fontsize=9)
+    plt.scatter(210/60, 90, color='black')  # Plot the data point
+    plt.text(210/60 + 0.1, 90, 'Yangda', color='black', fontsize=9)        
+    plt.xlabel('Endurance (hours)')
+    plt.ylabel('Speed (km/h)')
+    plt.title('Contour Plot for Objective Value 3')
+    plt.show()
+
+
+
+
