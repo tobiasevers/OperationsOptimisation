@@ -45,13 +45,13 @@ x2 = optimization_results.get('x2', {})
 print('X2:', x2)
 
 # Plot the locations and paths using the decision variables
-plot_locations(starting_locations, target_locations, x1, x2, center_location)
+#plot_locations(starting_locations, target_locations, x1, x2, center_location)
 
 # Plot the time-space network based on the optimization results
-plot_time_space_network(optimization_results)
+#plot_time_space_network(optimization_results)
 
 # Create a network map visualization for the given model
-NetworkMap(model)
+#NetworkMap(model)
 
 
 # Plot contour maps for different speeds and endurance levels

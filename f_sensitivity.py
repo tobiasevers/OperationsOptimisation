@@ -254,7 +254,7 @@ def sens_endurance(endurance, obj, starting_locations, target_locations, n_targe
     return obj_val
 
 def plot_speed(min_speed, max_speed, starting_locations, target_locations, n_targets=3, n_UAVS=6, endurance=240, delay=1):
-    speed_range = range(min_speed, max_speed, 5)
+    speed_range = range(min_speed, max_speed + 5, 5)
     # Lists to store results
     lst_sens_speed_1 = []
     lst_sens_speed_2 = []
@@ -289,7 +289,7 @@ def plot_speed(min_speed, max_speed, starting_locations, target_locations, n_tar
     plt.show()
 
 def plot_endurance(min_end, max_end, starting_locations, target_locations, n_targets=3, n_UAVS=6, drone_speed=100, delay=1):
-    endurance_range = range(min_end, max_end, 5)
+    endurance_range = range(min_end, max_end + 5, 5)
 
     lst_endurance_1 = []
     lst_endurance_2 = []
