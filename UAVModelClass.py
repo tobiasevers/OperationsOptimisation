@@ -76,6 +76,7 @@ class UAVStrikeModel:
             self.m.setObjective(quicksum(self.time[i, j, v, k] * self.x1[i, j, v, k] for i in self.lst_i for j in self.lst_j for v in self.lst_v for k in self.lst_k if (i, j, v, k) in self.x1), GRB.MINIMIZE)
         elif self.obj == 2:
             self.m.setObjective(0.1 * quicksum(self.t1[j, k] for j in self.lst_j for k in self.lst_k) + self.t, GRB.MINIMIZE)
+            #self.m.setObjective(self.t, GRB.MINIMIZE)
         elif self.obj == 3:
             self.m.setObjective(quicksum(self.x2[i, self.n + self.w + 1, v] for i in self.lst_i for v in self.lst_v if (i, self.n + self.w + 1, v) in self.x2), GRB.MAXIMIZE)
         self.m.update()
@@ -237,7 +238,10 @@ class UAVStrikeModel:
                 if j != i and (i, j, v, k) in self.x1), GRB.LESS_EQUAL, self.T)
 
         # Total time is the longest time
-        #self.m.addLConstr(max(value.X for value in self.t1.values()), GRB.LESS_EQUAL, self.t)
+        for j in self.lst_j:
+            for k in self.lst_k:
+                self.m.addLConstr(self.t >= self.t1[j, k])
+
         self.m.update()
 
     def optimize(self):
@@ -332,4 +336,4 @@ if __name__ == "__main__":
     model.optimize()  # Optimize model
     print(f'TIME ELAPSED: {model.elapsed_time} s')  # Print elapsed time
     model.print_solution()  # Print solution
-    model.save()  # Save results
+    model.save('test')  # Save results
