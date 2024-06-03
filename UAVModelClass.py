@@ -75,8 +75,8 @@ class UAVStrikeModel:
         if self.obj == 1:
             self.m.setObjective(quicksum(self.time[i, j, v, k] * self.x1[i, j, v, k] for i in self.lst_i for j in self.lst_j for v in self.lst_v for k in self.lst_k if (i, j, v, k) in self.x1), GRB.MINIMIZE)
         elif self.obj == 2:
-            self.m.setObjective(0.1 * quicksum(self.t1[j, k] for j in self.lst_j for k in self.lst_k) + self.t, GRB.MINIMIZE)
-            #self.m.setObjective(self.t, GRB.MINIMIZE)
+            #self.m.setObjective(0.1 * quicksum(self.t1[j, k] for j in self.lst_j for k in self.lst_k) + self.t, GRB.MINIMIZE)
+            self.m.setObjective(self.t, GRB.MINIMIZE)
         elif self.obj == 3:
             self.m.setObjective(quicksum(self.x2[i, self.n + self.w + 1, v] for i in self.lst_i for v in self.lst_v if (i, self.n + self.w + 1, v) in self.x2), GRB.MAXIMIZE)
         self.m.update()
@@ -222,9 +222,9 @@ class UAVStrikeModel:
             for v in self.lst_v:
                 for k in self.lst_k:
                     self.m.addConstr(self.t1[j, k] <= self.t2[v] + self.time[self.n + v, j, v, k] + (
-                                1 - self.x1[self.n + v, j, v, k]) * self.T)
+                                1 - self.x1[self.n + v, j, v, k]) * self.w * self.T)
                     self.m.addConstr(self.t1[j, k] >= self.t2[v] + self.time[self.n + v, j, v, k] - (
-                                1 - self.x1[self.n + v, j, v, k]) * self.T)
+                                1 - self.x1[self.n + v, j, v, k]) * self.w * self.T)
 
         # Sequence of tasks
         for j in self.lst_j:

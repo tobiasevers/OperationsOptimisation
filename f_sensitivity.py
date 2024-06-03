@@ -313,6 +313,7 @@ def plot_endurance(min_end, max_end, starting_locations, target_locations, n_tar
     ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
     color = 'tab:red'
     ax2.set_ylabel('Objective Value 2', color=color)  # we already handled the x-label with ax1
+    ax2.set_ylim(300, 400)
     ax2.plot(endurance_range, lst_endurance_2, color=color, label='Mission time (min)')
     ax2.tick_params(axis='y', labelcolor=color)
 
