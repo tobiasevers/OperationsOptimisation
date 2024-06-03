@@ -8,7 +8,7 @@ from f_sensitivity import plot_speed, plot_endurance, plot_heatmap_speed_enduran
 
 # Define the speed of the drone in kilometers per hour
 drone_speed = 89  # in km/h
-endurance = 800# in seconds
+endurance = 360# in seconds
 
 # Create the time dictionary using the starting and target locations with the given drone speed
 time_dictionary = create_time_dictionary(starting_locations, target_locations, drone_speed)
@@ -62,4 +62,4 @@ plot_time_space_network(optimization_results)
 
 
 # Perform sensitivity analysis for different endurance levels (300 km to 650 km)
-#plot_endurance(300, 600, starting_locations, target_locations, drone_speed=drone_speed)
+plot_endurance(240, 600, starting_locations, target_locations, drone_speed=drone_speed)
