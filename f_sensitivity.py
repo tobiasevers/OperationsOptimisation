@@ -8,35 +8,45 @@ import pandas as pd
 import random as rd
 import seaborn as sns
 
-
-
 def plot_heatmap(weighted_array, title):
     """
-    Plot a heatmap from a weighted array with labels and a color bar.
+    Plot a heatmap from a weighted array with labels and a color bar on a logarithmic scale.
     """
-    # Replace NaN values with a small positive value
-    weighted_array = np.nan_to_num(weighted_array, nan=1e-5)
-    # Replace any non-positive values with a small positive value
-    weighted_array[weighted_array <= 0] = 1e-5
+    # Replace NaN values with np.nan_to_num (not needed as we mask them)
+    weighted_array = np.nan_to_num(weighted_array, nan=np.nan)
 
-    fig, ax = plt.subplots(figsize=(8, 6))
-    # Use LogNorm for logarithmic color scale
-    cax = ax.matshow(weighted_array, cmap='Blues', interpolation='nearest',
-                     norm=LogNorm(vmin=weighted_array.min(), vmax=weighted_array.max()))
-    fig.colorbar(cax, label='Trade-off Value')
+    # Handle zeros or negative values by setting them to a small positive number
+    weighted_array[weighted_array <= 0] = 1e-10
 
-    for i in range(weighted_array.shape[0]):
-        for j in range(weighted_array.shape[1]):
-            if not np.isnan(weighted_array[i, j]):
-                ax.text(j, i, f'{weighted_array[i, j]:.2f}', ha='center', va='center', color='black')
+    # Apply logarithmic transformation
+    log_weighted_array = np.log10(weighted_array)
 
-    plt.title(title)
+    fig, ax = plt.subplots(figsize=(5, 4))
+    # Create a colormap with NaN values as light red
+    cmap = plt.cm.Blues
+    cmap.set_bad(color='lightpink')  # light red color for NaNs
+
+    # Mask NaN values
+    masked_array = np.ma.masked_where(np.isnan(log_weighted_array), log_weighted_array)
+
+    # Plot heatmap with flipped y-axis
+    cax = ax.imshow(masked_array, aspect='auto', origin='upper', cmap=cmap)
+
+    # Color bar with logarithmic scale
+    cbar = fig.colorbar(cax, label='Trade-off Value (log scale)')
+    cbar.ax.set_yticklabels([f"$10^{{{int(tick)}}}$" for tick in cbar.get_ticks()])
+
+    # Set labels and title
     plt.xlabel('Number of UAVs')
     plt.ylabel('Number of Targets')
+    plt.title(title)
+
+    # Set ticks
     ax.set_xticks(range(weighted_array.shape[1]))
     ax.set_xticklabels(range(1, weighted_array.shape[1] + 1))
     ax.set_yticks(range(weighted_array.shape[0]))
     ax.set_yticklabels(range(1, weighted_array.shape[0] + 1))
+
     plt.show()
 
 
@@ -48,12 +58,14 @@ def generate_heatmap_data(min_targets, max_targets, min_uavs, max_uavs, enduranc
 
     for i, n_targets in enumerate(range(min_targets, max_targets + 1)):
         for j, n_uavs in enumerate(range(min_uavs, max_uavs + 1)):
-            model = UAVStrikeModel(n_targets=n_targets, n_uavs=n_uavs, endurance=endurance, delay=delay)
-            model.optimize()
-            if model.m.status == GRB.OPTIMAL:
-                heatmap_data[i, j] = model.elapsed_time
-            else:
-                heatmap_data[i, j] = np.nan  # Assign NaN if no optimal solution found
+            print('NOW:', ' uav:', n_uavs, ' targets:', n_targets)
+            if n_targets != n_uavs:
+                model = UAVStrikeModel(n_targets=n_targets, n_uavs=n_uavs, endurance=endurance, delay=delay)
+                model.optimize()
+                if model.m.status == GRB.OPTIMAL:
+                    heatmap_data[i, j] = model.elapsed_time
+                else:
+                    heatmap_data[i, j] = np.nan  # Assign NaN if no optimal solution found
 
     return heatmap_data
 
